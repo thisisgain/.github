@@ -1,0 +1,10 @@
+# action.yml
+name: 'Cypress'
+description: 'Run Cypress tests in a container'
+inputs:
+  hosts_entry:
+    description: 'Entry for the hosts file'
+    required: false
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
