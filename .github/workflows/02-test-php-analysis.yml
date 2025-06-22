@@ -1,0 +1,112 @@
+# Name: PHP static analysis.
+# Type: Test.
+# Use: Run Drupal-focused PHP static analysis checks, including PHPCS, PHPStan
+# and Drupal Check.
+
+name: PHP Analysis
+
+on:
+  workflow_call:
+    inputs:
+      directory:
+        description: 'The directory to run in'
+        type: string
+        default: './'
+      container:
+        description: 'The docker image to use'
+        type: string
+        required: true
+      source_key:
+        description: 'The source cache key suffix'
+        type: string
+        default: 'composer'
+      phpcs:
+        description: 'Run PHP Coding Standards checks'
+        type: boolean
+        default: true
+      phpstan:
+        description: 'Run PHPStan checks'
+        type: boolean
+        default: false
+      drupal_check:
+        description: 'Directories for the Drupal Check scan, or empty to disable'
+        type: string
+        default: ''
+      drupal_check_level:
+        description: 'OptionDirectories for the Drupal Check scan, or empty to disable'
+        type: string
+        default: 'a'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  phpcs:
+    name: 'PHP Coding Standards'
+    if: inputs.phpcs
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    steps:
+      - name: Restore build from a previous step.
+        uses: actions/cache/restore@v3
+        id: restore-build
+        with:
+          path: ./*
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Run PHPCS.
+        run: |
+          cd ${{ inputs.directory }}
+          ./vendor/bin/phpcs
+
+  phpstan:
+    name: 'PHPStan'
+    if: inputs.phpstan
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    steps:
+      - name: Restore build from a previous step.
+        uses: actions/cache/restore@v3
+        id: restore-build
+        with:
+          path: ./*
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Run PHPStan.
+        run: |
+          cd ${{ inputs.directory }}
+          ./vendor/bin/phpstan
+
+  drupal-check:
+    name: 'Drupal Check Analysis'
+    if: inputs.drupal_check != ''
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    steps:
+      - name: Restore build from a previous step.
+        uses: actions/cache/restore@v3
+        id: restore-build
+        with:
+          path: ./*
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Run Drupal Check.
+        run: |
+          cd ${{ inputs.directory }}
+          ./vendor/bin/drupal-check -${{ inputs.drupal_check_level }} ${{ inputs.drupal_check }}

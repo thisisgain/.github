@@ -1,0 +1,64 @@
+# Name: Run Composer security checks.
+# Type: Test.
+# Use: Run Composer security checks against the root composer.lock file.
+
+name: Composer security checks.
+
+on:
+  workflow_call:
+    inputs:
+      directory:
+        description: 'The directory in which to run commands'
+        type: string
+        default: './'
+      container:
+        description: 'The docker image to use'
+        type: string
+        required: true
+      source_key:
+        description: 'The source cache key suffix'
+        type: string
+        default: 'composer'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  composer-security:
+    name: 'Composer security'
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    steps:
+      - name: Restore build from a previous step.
+        uses: actions/cache/restore@v3
+        id: restore-build
+        with:
+          path: ./*
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Get Composer Cache Directory
+        run: |
+          echo "ACTIONS_COMPOSER_CACHE_DIR=$(composer config cache-dir)" >> $GITHUB_ENV
+
+      - name: Preserve the composer cache.
+        uses: actions/cache/restore@v3
+        with:
+          path: ${{ env.ACTIONS_COMPOSER_CACHE_DIR }}
+          # Save the cache with the hash of the lock files.
+          key: composer-${{ hashFiles('**/composer.lock') }}
+          # If there is no direct hit, restore the latest composer-* cache. This
+          # will first look on the current branch, then on the parent/default
+          # branch.
+          restore-keys: |
+            composer-
+
+      - name: Run security checks.
+        run: |
+          git config --global --add safe.directory $(realpath .)
+          composer require --dev --dry-run roave/security-advisories:@dev

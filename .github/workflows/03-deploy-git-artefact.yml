@@ -1,0 +1,56 @@
+# Name: Deploy an artefact using Git.
+# Type: Deploy.
+# Use: Deploy a fully-build artefact to a remote environment.
+
+name: Push a git branch
+
+on:
+  workflow_call:
+    inputs:
+      target_ref:
+        description: 'The target ref to push to, e.g. refs/heads/BRANCH or refs/tags/TAG'
+        type: string
+        required: false
+    secrets:
+      TARGET_REPO:
+        description: 'URL of the target repo.'
+        required: true
+      TARGET_SSH_KEY:
+        description: 'Private SSH key authorised to push to the target repo'
+        required: true
+      SSH_CONFIG:
+        description: 'SSH configuration'
+        required: true
+      KNOWN_HOSTS:
+        description: 'SSH known hosts'
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  push-code:
+    name: 'Push branch to repo'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v3
+        with:
+          # Ensure PRs check out the right commit.
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+          # Perform a full checkout to prevent orphaned commits.
+          fetch-depth: 0
+
+      - name: Set up the SSH key and configuration
+        uses: shimataro/ssh-key-action@v2.3.1
+        with:
+          key: ${{ secrets.TARGET_SSH_KEY }}
+          config: ${{ secrets.SSH_CONFIG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      - name: Add the git remote
+        run: git remote add target ${{ secrets.TARGET_REPO }}
+
+      - name: Push branch
+        run: git push target HEAD:${{ inputs.target_ref || (github.event.pull_request.head.ref && format('refs/heads/{0}', github.event.pull_request.head.ref) ) || github.ref }} --force

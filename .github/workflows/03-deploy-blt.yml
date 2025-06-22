@@ -1,0 +1,149 @@
+# Name: Deploy an artefact to Acquia using BLT.
+# Type: Deploy.
+# Use: Use BLT commands to deploy an artefact to an Acquia environment.
+# Note: BLT is deprecated and the use of this command is discouraged.
+
+name: Build & push BLT artefact.
+
+on:
+  workflow_call:
+    inputs:
+      container:
+        description: 'The docker image to use'
+        type: string
+        required: true
+      git_name:
+        description: 'The git committer name'
+        type: string
+        required: true
+      git_email:
+        description: 'The git committer email'
+        type: string
+        required: true
+      dry_run:
+        description: 'Whether this should be a dry-run only (no push to artefact repo)'
+        type: boolean
+        required: true
+      source_key:
+        description: 'The source cache key suffix, or empty to checkout'
+        type: string
+    secrets:
+      ARTEFACT_REPO:
+        description: 'UNUSED'
+      ARTEFACT_SSH_KEY:
+        description: 'Private SSH key authorised to push to the artefact repo.'
+        required: true
+      SSH_CONFIG:
+        description: 'SSH configuration'
+        required: true
+      KNOWN_HOSTS:
+        description: 'SSH known hosts'
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  push-code:
+    name: 'Build artefact and push to repo'
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    env:
+      COMMIT_MSG: ${{ github.event.head_commit.message }}
+      COMMIT_SHA: ${{ github.sha }}
+      COMMIT_REF: ${{ github.event.ref }}
+      DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+      GIT_AUTHOR_NAME: ${{ inputs.git_name }}
+      GIT_AUTHOR_EMAIL: ${{ inputs.git_email }}
+      GIT_COMMITTER_NAME: ${{ inputs.git_name }}
+      GIT_COMMITTER_EMAIL: ${{ inputs.git_email }}
+    steps:
+      - name: Disable git safe directories as we are in a container.
+        run: git config --global --add safe.directory '*'
+
+      - name: Restore build from a previous step.
+        # Only restore if we have a source key.
+        if: inputs.source_key != ''
+        uses: actions/cache/restore@v3
+        id: restore-build
+        with:
+          path: ./*
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        # Only check if we have a source key.
+        if: |
+          inputs.source_key != '' &&
+          steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Checkout the code.
+        # Only if we do not have a source key.
+        if: inputs.source_key == ''
+        uses: actions/checkout@v3
+
+      - name: Get commit details for pull requests.
+        if: startsWith(github.ref, 'refs/pull/')
+        env:
+          COMMIT_BRANCH: ${{ github.head_ref }}
+        run: |
+          echo "COMMIT_SHA=`git log -1 --pretty=format:"%s" | cut -d' ' -f2`" >> $GITHUB_ENV
+          echo "COMMIT_REF=refs/heads/$COMMIT_BRANCH" >> $GITHUB_ENV
+          echo "COMMIT_MSG=`curl -H 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' https://api.github.com/repos/${{ github.repository }}/commits/$COMMIT_BRANCH | grep '"message":' | grep -oE ': ".*",' | cut -c4- | rev | cut -c3- | rev`" >> $GITHUB_ENV
+
+      - name: Get Composer Cache Directory
+        run: |
+          echo "ACTIONS_COMPOSER_CACHE_DIR=$(composer config cache-dir)" >> $GITHUB_ENV
+
+      - name: Preserve the composer cache.
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.ACTIONS_COMPOSER_CACHE_DIR }}
+          enableCrossOsArchive: true
+          # Save the cache with the hash of the lock files.
+          key: composer-${{ hashFiles('**/composer.lock') }}
+          # If there is no direct hit, restore the latest composer-* cache. This
+          # will first look on the current branch, then on the parent/default
+          # branch.
+          restore-keys: |
+            composer-
+
+      - name: Preserve the npm cache.
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            ~/.nvm
+          enableCrossOsArchive: true
+          # Save the cache with the hash of the lock files.
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          # If there is no direct hit, restore the latest npm-* cache. This will
+          # first look on the current branch, then on the parent/default branch.
+          restore-keys: |
+            npm-
+
+      - name: Set up the SSH key and configuration.
+        uses: shimataro/ssh-key-action@v2.3.1
+        with:
+          key: ${{ secrets.ARTEFACT_SSH_KEY }}
+          config: ${{ secrets.SSH_CONFIG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      - name: Install composer dependencies.
+        # Only if we do not have a source key.
+        if: inputs.source_key == ''
+        run: composer install --no-progress
+
+      - name: Deploy the artifact for branches/pulls
+        if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pull/')
+        run: |
+          ./vendor/bin/blt artifact:deploy --commit-msg "[BUILD ${COMMIT_SHA:0:7}] $COMMIT_MSG" $DRY_RUN --branch "${COMMIT_REF:11}-build" --no-interaction --verbose
+          [ -z "$DRY_RUN" ] && echo "🥪 Branch ${COMMIT_REF:11}-build pushed!" >> $GITHUB_STEP_SUMMARY || true
+
+      - name: Deploy the artifact for tags
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          ./vendor/bin/blt artifact:deploy --commit-msg "[BUILD ${COMMIT_REF:10}] $COMMIT_MSG" $DRY_RUN --tag "${COMMIT_REF:10}-build" --no-interaction --verbose
+          [ -z "$DRY_RUN" ] && echo echo "🥪 Tag ${COMMIT_REF:10}-build pushed!" >> $GITHUB_STEP_SUMMARY || true

@@ -1,0 +1,126 @@
+# Name: Deploy a Git branch directly to a remote repository.
+# Type: Deploy.
+# Use: Without building an artefact first, deploy a branch to a remove
+# environment, and allow the host to perform build tasks.
+
+name: Deploy via a git branch.
+
+on:
+  workflow_call:
+    inputs:
+      branch:
+        description: 'The target branch'
+        type: string
+        required: true
+      remote_repo:
+        description: 'Whether to push to a remote repo'
+        type: boolean
+        default: false
+      git_name:
+        description: 'The git committer name'
+        type: string
+        required: true
+      git_email:
+        description: 'The git committer email'
+        type: string
+        required: true
+    secrets:
+      GIT_ACCESS_TOKEN:
+        description: 'The write access token for the git repo. Required for github repo.'
+        required: false
+      TARGET_REPO:
+        description: 'URL of the target repo. Required for remote repo.'
+        required: false
+      TARGET_SSH_KEY:
+        description: 'Private SSH key authorised to push to the target repo. Required for remote repo.'
+        required: false
+      SSH_CONFIG:
+        description: 'SSH configuration. Required for remote repo.'
+        required: false
+      KNOWN_HOSTS:
+        description: 'SSH known hosts. Required for remote repo.'
+        required: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  push-code:
+    name: 'Push branch to repo'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the code with a token
+        uses: actions/checkout@v3
+        if: ${{ !inputs.remote_repo }}
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GIT_ACCESS_TOKEN }}
+
+      - name: Check out the code without a token
+        uses: actions/checkout@v3
+        if: ${{ inputs.remote_repo }}
+        with:
+          fetch-depth: 0
+
+      - name: Set up the SSH key and configuration
+        if: ${{ inputs.remote_repo }}
+        uses: shimataro/ssh-key-action@v2.3.1
+        with:
+          key: ${{ secrets.TARGET_SSH_KEY }}
+          config: ${{ secrets.SSH_CONFIG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      - name: Fetch the remote branches
+        if: ${{ inputs.remote_repo }}
+        run: |
+          git remote add target ${{ secrets.TARGET_REPO }}
+          git fetch target
+
+      - name: Checkout the target branch, creating if necessary
+        run: git checkout ${{ inputs.branch }} || git checkout -b ${{ inputs.branch }}
+
+      - name: Update the code to the ref we are deploying
+        # Checkout of a target branch will only check out changes within that
+        # branch, which means removed files don't get removed. We handle that
+        # with a check and remove. We also use the sha specifically to avoid
+        # a subsequent push on a branch resulting in a different commit than
+        # intended.
+        run: |
+          git checkout ${{ github.sha }} -- .
+          git diff ${{ github.sha }} --name-only | tr '\n' '\0' | xargs -0 -r git rm
+
+      - name: Ensure everything matches before proceeding
+        run: |
+          git config --global --add safe.directory $(realpath .)
+          git diff ${{ github.sha }}
+          git diff-index --quiet ${{ github.sha }}
+
+      - name: Commit the changes if ref is a branch
+        if: startsWith(github.ref, 'refs/heads/')
+        env:
+          GITHUB_REF: ${{ github.ref }}
+          GITHUB_SHA: ${{ github.sha }}
+          GIT_AUTHOR_NAME: ${{ inputs.git_name }}
+          GIT_AUTHOR_EMAIL: ${{ inputs.git_email }}
+          GIT_COMMITTER_NAME: ${{ inputs.git_name }}
+          GIT_COMMITTER_EMAIL: ${{ inputs.git_email }}
+        run: git commit -m "Deploy ${GITHUB_REF:11} [${GITHUB_SHA:0:7}]" --allow-empty
+
+      - name: Commit the changes if ref is a tag
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_REF: ${{ github.ref }}
+          GIT_AUTHOR_NAME: ${{ inputs.git_name }}
+          GIT_AUTHOR_EMAIL: ${{ inputs.git_email }}
+          GIT_COMMITTER_NAME: ${{ inputs.git_name }}
+          GIT_COMMITTER_EMAIL: ${{ inputs.git_email }}
+        run: git commit -m "Release ${GITHUB_REF:10}" --allow-empty
+
+      - name: Push the branch to github
+        if: ${{ !inputs.remote_repo }}
+        run: git push origin ${{ inputs.branch }}
+
+      - name: Push the branch to a remote
+        if: ${{ inputs.remote_repo }}
+        run: git push target ${{ inputs.branch }}

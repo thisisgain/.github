@@ -1,0 +1,141 @@
+# Name: Build an application using Composer.
+# Type: Build task.
+# Use: Using the root composer.lock file, build an application.
+
+name: Build and validate Composer.
+
+on:
+  workflow_call:
+    inputs:
+      directory:
+        description: 'The directory in which to run commands'
+        type: string
+        default: './'
+      container:
+        description: 'The docker image to use'
+        type: string
+        required: true
+      source_key:
+        description: 'The source cache key suffix, or empty to checkout'
+        type: string
+      target_key:
+        description: 'The target cache key suffix, or empty to throw away'
+        type: string
+        default: 'composer'
+      ssh_config:
+        description: 'Indicate we need to run SSH configuration for asset access'
+        type: boolean
+        default: false
+      composer_options:
+        description: 'Additional options to pass to composer'
+        type: string
+        default: '-o --apcu-autoloader'
+    secrets:
+      SSH_KEY:
+        description: 'Private SSH key for any authenticated assets'
+      SSH_CONFIG:
+        description: 'SSH configuration'
+      KNOWN_HOSTS:
+        description: 'SSH known hosts'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  composer-build:
+    name: Build using Composer
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    steps:
+      - name: Disable git safe directories as we are in a container.
+        run: git config --global --add safe.directory '*'
+
+      - name: Set up the build cache.
+        # Only run if we have a target build.
+        if: inputs.target_key != ''
+        uses: actions/cache@v3
+        id: target-build
+        with:
+          path: ./*
+          enableCrossOsArchive: true
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.target_key }}
+
+      - name: Restore build from a previous step.
+        # Skip if we already have a full build.
+        # Only restore if we have a source key.
+        if: |
+          (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.source_key != ''
+        uses: actions/cache@v3
+        id: restore-build
+        with:
+          path: ./*
+          enableCrossOsArchive: true
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        # Skip if we already have a full build.
+        # Only if we have a source key.
+        if: |
+          (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.source_key != '' &&
+          steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Checkout the code.
+        # Skip if we already have a full build.
+        # Skip if we are using a source build.
+        if: |
+          (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.source_key == ''
+        uses: actions/checkout@v3
+
+      - name: Get Composer Cache Directory.
+        # Skip if we already have a full build.
+        if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true')
+        run: |
+          echo "ACTIONS_COMPOSER_CACHE_DIR=$(composer config cache-dir)" >> $GITHUB_ENV
+
+      - name: Preserve the composer cache.
+        # Skip if we already have a full build.
+        if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true')
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.ACTIONS_COMPOSER_CACHE_DIR }}
+          enableCrossOsArchive: true
+          # Save the cache with the hash of the lock files.
+          key: composer-${{ hashFiles('**/composer.lock') }}
+          # If there is no direct hit, restore the latest composer-* cache. This
+          # will first look on the current branch, then on the parent/default
+          # branch.
+          restore-keys: |
+            composer-
+
+      - name: Validate the lock file.
+        run: composer -d "${{ inputs.directory }}" validate --no-check-all --ansi
+
+      - name: Set up the SSH key and configuration.
+        # Skip if we already have a full build.
+        # Run if we should configure SSH.
+        if: |
+          (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.ssh_config
+        uses: shimataro/ssh-key-action@v2.3.1
+        with:
+          key: ${{ secrets.SSH_KEY }}
+          config: ${{ secrets.SSH_CONFIG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      - name: Install composer dependencies.
+        # Skip if we already have a full build.
+        if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true')
+        run: composer -d "${{ inputs.directory }}" install --no-progress ${{ inputs.composer_options }}
+
+      - name: Check for changes to committed code.
+        run: |
+          git config --global --add safe.directory $(realpath .)
+          git diff ${{ inputs.directory }}
+          git diff-index --quiet HEAD -- ${{ inputs.directory }}

@@ -1,0 +1,99 @@
+# Name: Run BLT tests.
+# Type: Test.
+# Use: Use BLT commands to run tests, as defined in blt.yml.
+# Note: BLT is deprecated and the use of this command is discouraged.
+
+name: Validation & tests via BLT.
+
+on:
+  workflow_call:
+    inputs:
+      container:
+        description: 'The docker image to use'
+        type: string
+        required: true
+      source_key:
+        description: 'The source cache key suffix, or empty to checkout'
+        type: string
+        default: 'composer'
+      settings_ci:
+        description: 'Whether to copy the settings.ci.php to settings.local.php'
+        type: boolean
+        default: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CI: GITHUB_ACTIONS
+
+jobs:
+  validate:
+    name: 'Validate'
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    steps:
+      - name: Restore build from a previous step.
+        uses: actions/cache/restore@v3
+        id: restore-build
+        with:
+          path: ./*
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Disable telemetry.
+        run: ./vendor/bin/blt blt:telemetry:disable --no-interaction
+
+      - name: Run BLT validate.
+        run: ./vendor/bin/blt validate --no-interaction
+
+  test:
+    name: 'Test'
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    services:
+      db:
+        image: mysql:5.7
+        ports: [ 3306 ]
+        env:
+          MYSQL_USER: db
+          MYSQL_PASSWORD: db
+          MYSQL_DATABASE: db
+          MYSQL_ROOT_PASSWORD: root
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+    steps:
+      - name: Restore build from a previous step.
+        uses: actions/cache/restore@v3
+        id: restore-build
+        with:
+          path: ./*
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Configure Drupal settings.
+        if: inputs.settings_ci
+        run: |
+          cp docroot/sites/default/settings.ci.php docroot/sites/default/settings.local.php
+          ./vendor/bin/drush status
+
+      - name: Run BLT test.
+        env:
+          SIMPLETEST_DB: 'mysql://db:db@db:3306/db'
+          SIMPLETEST_BASE_URL: 'http://127.0.0.1:8888'
+        # drush runserver requires a full bootstrap, so use php -S directly.
+        run: |
+          (cd docroot && php -S 127.0.0.1:8888 .ht.router.php > /tmp/php-log.txt 2>&1 & )
+          ./vendor/bin/blt tests
+
+      - name: Output PHP logs on error.
+        if: failure()
+        run: cat /tmp/php-log.txt

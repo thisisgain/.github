@@ -1,0 +1,177 @@
+# Name: Deploy an artefact to Acquia.
+# Type: Deploy.
+# Use: Having built an artefact using the build workflows, deploy it to an
+# Acquia environment.
+
+name: Push a build artefact.
+
+on:
+  workflow_call:
+    inputs:
+      container:
+        description: 'The docker image to use'
+        type: string
+        required: true
+      git_name:
+        description: 'The git committer name'
+        type: string
+        required: true
+      git_email:
+        description: 'The git committer email'
+        type: string
+        required: true
+      source_key:
+        description: 'The source cache key suffix, or empty to checkout'
+        type: string
+      add_files:
+        description: 'The files/directories to add, bypassing .gitignore'
+        type: string
+      add_files_defaults:
+        description: 'Add the default set of files'
+        type: boolean
+        default: true
+      remove_files:
+        description: 'The files/directories to remove from deployment'
+        type: string
+      remove_files_defaults:
+        description: 'Remove the default set of files'
+        type: boolean
+        default: true
+      composer_directory:
+        description: 'The directory in which to run composer commands, or an empty string to disable'
+        type: string
+        default: './'
+      composer_options:
+        description: 'Additional options to pass to composer when removing dev dependencies'
+        type: string
+        default: '-o --apcu-autoloader'
+    secrets:
+      ARTEFACT_REPO:
+        description: 'URL of the artefact repo.'
+        required: true
+      ARTEFACT_SSH_KEY:
+        description: 'Private SSH key authorised to push to the artefact repo'
+        required: true
+      SSH_CONFIG:
+        description: 'SSH configuration'
+        required: true
+      KNOWN_HOSTS:
+        description: 'SSH known hosts'
+        required: true
+      GITHUB_ACCESS_TOKEN:
+        description: 'The github token, required for the unshallow fetch'
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  push-code:
+    name: 'Push artefact to repo'
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    env:
+      COMMIT_MSG: ${{ github.event.head_commit.message }}
+      COMMIT_SHA: ${{ github.sha }}
+      COMMIT_REF: ${{ github.event.ref }}
+      GIT_AUTHOR_NAME: ${{ inputs.git_name }}
+      GIT_AUTHOR_EMAIL: ${{ inputs.git_email }}
+      GIT_COMMITTER_NAME: ${{ inputs.git_name }}
+      GIT_COMMITTER_EMAIL: ${{ inputs.git_email }}
+    steps:
+      - name: Disable git safe directories as we are in a container.
+        run: git config --global --add safe.directory '*'
+
+      - name: Restore build from a previous step.
+        uses: actions/cache/restore@v3
+        id: restore-build
+        with:
+          path: ./*
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Run the composer install to remove dev dependencies.
+        if: inputs.composer_directory != ''
+        run: composer -d "${{ inputs.composer_directory }}" install --no-dev --no-progress ${{ inputs.composer_options }}
+
+      - name: Get commit details for pull requests.
+        if: startsWith(github.ref, 'refs/pull/')
+        env:
+          COMMIT_BRANCH: ${{ github.head_ref }}
+        run: |
+          echo "COMMIT_SHA=`git log -1 --pretty=format:"%s" | cut -d' ' -f2`" >> $GITHUB_ENV
+          echo "COMMIT_REF=refs/heads/$COMMIT_BRANCH" >> $GITHUB_ENV
+          echo "COMMIT_MSG=`curl -H 'authorization: Bearer ${{ secrets.GITHUB_TOKEN }}' https://api.github.com/repos/${{ github.repository }}/commits/$COMMIT_BRANCH | grep '"message":' | grep -oE ': ".*",' | cut -c4- | rev | cut -c3- | rev`" >> $GITHUB_ENV
+
+      - name: Set up the SSH key and configuration.
+        uses: shimataro/ssh-key-action@v2.3.1
+        with:
+          key: ${{ secrets.ARTEFACT_SSH_KEY }}
+          config: ${{ secrets.SSH_CONFIG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      - name: Add & fetch the artefact repo.
+        run: |
+          git remote add artefact ${{ secrets.ARTEFACT_REPO }}
+          git fetch artefact
+
+      - name: Ensure we have an un-shallow fetch.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_ACCESS_TOKEN }}
+        # At some replace this with trying to build on top of the parent when
+        # there isn't a previous build in the same branch.
+        run: |
+          git remote set-url origin $(git remote get-url origin | sed 's#https://#https://${{ secrets.GITHUB_TOKEN }}:${{ secrets.GITHUB_TOKEN }}@#')
+          git fetch --unshallow origin
+
+      - name: Checkout artefact branch without changing local files.
+        if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pull/')
+        run: |
+          git checkout -b ${COMMIT_REF:11}-build
+          git reset --soft artefact/${COMMIT_REF:11}-build || true
+
+      - name: Checkout tag's artefact branch without changing local files.
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          rawbranch=$(git branch -r --contains ${COMMIT_REF:10} | grep -Eo 'origin/[^ ]+$' | head -n 1)
+          branch=${rawbranch/origin\/}
+          git reset --soft artefact/${branch}-build || true
+
+      - name: Remove nested git directories.
+        run: find . -mindepth 2 -type d -name .git | xargs rm -rf
+
+      - name: Add the default build files.
+        if: inputs.add_files_defaults
+        run: git add -Af vendor/ docroot/.htaccess docroot/index.php docroot/autoload.php docroot/robots.txt docroot/*/
+
+      - name: Add the additional build files.
+        if: inputs.add_files != ''
+        run: git add -Af ${{ inputs.add_files }}
+
+      - name: Remove the default exclusions.
+        if: inputs.remove_files_defaults
+        run: git rm --ignore-unmatch -rf .ddev/ .github/ patches/ docroot/core/install.php docroot/core/update.php docroot/core/rebuild.php
+
+      - name: Remove the additional exclusion.
+        if: inputs.remove_files != ''
+        run: git rm --ignore-unmatch -rf ${{ inputs.remove_files }}
+
+      - name: Deploy the artifact for branches/pulls
+        if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pull/')
+        run: |
+          git commit --allow-empty -m "[BUILD ${COMMIT_SHA:0:7}] $COMMIT_MSG"
+          git push artefact HEAD
+          echo "🏗 Branch ${COMMIT_REF:11}-build pushed!" >> $GITHUB_STEP_SUMMARY
+
+      - name: Deploy the artifact for tags
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          git commit --allow-empty -m "[BUILD ${COMMIT_SHA:0:7}] Tag ${COMMIT_REF:10}"
+          git tag ${COMMIT_REF:10}-build
+          git push artefact ${COMMIT_REF:10}-build
+          echo "🏗 Tag ${COMMIT_REF:10}-build pushed!" >> $GITHUB_STEP_SUMMARY

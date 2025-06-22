@@ -1,0 +1,99 @@
+# Name: Backup databases on Acquia.
+# Type: Helper.
+# Use: Backup one or more databases using ACLI.
+
+name: Workflow to backup databases on Acquia.
+
+on:
+  workflow_call:
+    inputs:
+      filter:
+        description: 'Optionally, provide a filter for the databases. See: https://docs.acquia.com/acquia-cloud-platform/add-ons/acquia-cli/commands/api:applications:database-list'
+        type: string
+        required: false
+      php_version:
+        description: 'Optionally, specify a PHP version to install. Default: 8.2.'
+        type: string
+        required: false
+        default: '8.2'
+    secrets:
+      ENVIRONMENT_ID:
+        description: 'Acquia environment ID.'
+        required: true
+      ACLI_CLIENT_ID:
+        description: 'The client ID for authenticating with ACLI.'
+        required: true
+      ACLI_CLIENT_SECRET:
+        description: 'The client secret for authenticating with ACLI.'
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  backup-databases:
+    name: 'Backup Acquia databases'
+    runs-on: ubuntu-latest
+    outputs:
+      databases: ${{ steps.get_databases.outputs.database_list }}
+    steps:
+      - name: Checking out code
+        uses: actions/checkout@v3
+
+      - name: Installing PHP
+        uses: shivammathur/setup-php@master
+        with:
+          php-version: ${{ inputs.php_version }}
+
+      - name: Installing dependencies
+        run: |
+          curl -OL https://github.com/acquia/cli/releases/download/2.24.0/acli.phar
+          echo "ACLI downloaded!"
+
+      - name: Authorizing with ACLI
+        run: |
+          php acli.phar auth:login -n \
+            --key="${{ secrets.ACLI_CLIENT_ID }}" \
+            --secret="${{ secrets.ACLI_CLIENT_SECRET }}"
+
+      - name: Retrieving all database names for this environment
+        id: get_databases
+        # Gets databases filtering by a name. If no filter is provided, it'll
+        # retrieve all databases.
+        run: |
+          # Disable ACLI telemetry
+          disable_acli_telemetry=$(php acli.phar self:telemetry:disable)
+
+          # Gets a list of databases and uses jq to filter the output
+          # to the name value only.
+          database_list=$(php acli.phar api:environments:database-list \
+            --filter='${{ inputs.filter }}' \
+            ${{ secrets.ENVIRONMENT_ID }} \
+            | jq '.[] | .name')
+
+          # Processes the output of databases to allow the data to
+          # be passed to the 'Backing up databases' step.
+          delimiter="$(openssl rand -hex 8)"
+          echo "database_list<<${delimiter}" >> "${GITHUB_OUTPUT}"
+          echo ${database_list} >> ${GITHUB_OUTPUT}
+          echo "${delimiter}" >> "${GITHUB_OUTPUT}"
+
+      - name: Backing up databases
+        run: |
+
+          # Split database_list into an array.
+          IFS=', ' read -r -a backup_array <<< "${{ steps.get_databases.outputs.database_list }}"
+
+          # Loop through the array of databases and attempt to
+          # perform a backup for each database.
+          i=0
+          while [ $i -lt ${#backup_array[@]} ]; do
+            php acli.phar api:environments:database-backup-create \
+              --no-interaction \
+              ${{ secrets.ENVIRONMENT_ID }} \
+              ${backup_array[$i]} \
+              && echo "💧 Successfully backed up database "${backup_array[$i]}"." \
+              || echo "❌ Error backing up database "${backup_array[$i]}". See logs."
+            i=$((i + 1))
+          done

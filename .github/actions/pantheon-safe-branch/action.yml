@@ -1,0 +1,19 @@
+name: 'Generate a Pantheon multidev safe branch name'
+description: 'Pantheon has various restrictions on branch names that are suitable for multidev environments.'
+inputs:
+  branch_name:
+    description: 'The source branch name'
+    required: true
+  strip_prefix:
+    description: 'Optionally, a prefix to strip'
+    required: false
+  safe_prefix:
+    description: 'Optional single letter safe prefix'
+    required: false
+    default: 't'
+outputs:
+  branch_name:
+    description: 'The multidev safe branch name'
+runs:
+  using: 'node16'
+  main: 'index.js'

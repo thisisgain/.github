@@ -1,0 +1,125 @@
+# Name: Remove a Pantheon multidev environment/branch.
+# Type: Helper.
+# Use: Remove a Pantheon multidev environment that matches the current branch
+# name, and then remove the associated branch.
+
+name: Remove Pantheon multidev environment/branch.
+
+on:
+  workflow_call:
+    inputs:
+      pantheon_site_name:
+        description: 'Pantheon site name.'
+        type: string
+        required: true
+      strip_prefix:
+        description: 'Optionally, a prefix to strip'
+        type: string
+        required: false
+      safe_prefix:
+        description: 'Optional single letter safe prefix'
+        type: string
+        required: false
+        default: 't'
+    secrets:
+      PANTHEON_REPO:
+        description: 'URL of the Pantheon repo.'
+        required: true
+      PANTHEON_SSH_KEY:
+        description: 'Private SSH key authorised to push to the Pantheon repo.'
+        required: true
+      SSH_CONFIG:
+        description: 'SSH configuration'
+        required: true
+      KNOWN_HOSTS:
+        description: 'SSH known hosts'
+        required: true
+      PANTHEON_MACHINE_TOKEN:
+        description: 'Machine token authorised to the Pantheon site.'
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  destroy-multidev:
+    name: 'Remove Pantheon multi-dev environment'
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_NAME: ${{ github.head_ref }}
+      PANTHEON_SITE_NAME: ${{ inputs.pantheon_site_name }}
+    steps:
+      # It's safe to use a checkout here, instead of the cached build, just to
+      # get access to the script.
+      - name: Check out the code
+        uses: actions/checkout@v3
+
+      - name: Create multi-dev-safe branch name.
+        id: safe_branch
+        uses: accessdigital/.github/.github/actions/pantheon-safe-branch@main
+        with:
+          branch_name: ${{ github.head_ref }}
+          strip_prefix: ${{ inputs.strip_prefix }}
+          safe_prefix: ${{ inputs.safe_prefix }}
+
+      - name: Installing PHP
+        uses: shivammathur/setup-php@master
+        with:
+          php-version: '8.2'
+
+      - name: Install Terminus.
+        uses: pantheon-systems/terminus-github-actions@1.0.0
+        with:
+          pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
+
+      - name: Delete a multidev environment.
+        # Don't mark this as a build fail if the multi-dev doesn't delete.
+        # Maybe there wasn't a multi-dev to delete.
+        continue-on-error: true
+        run: |
+          terminus multidev:delete \
+            $PANTHEON_SITE_NAME.${{ steps.safe_branch.outputs.branch_name }} \
+            --yes \
+            --no-interaction \
+            --delete-branch
+          echo "🌩️ ${{ steps.safe_branch.outputs.branch_name }} multi-dev site deleted!" >> $GITHUB_STEP_SUMMARY
+
+  delete-branch:
+    name: 'Delete the branch from Pantheon'
+    runs-on: ubuntu-latest
+    env:
+      COMMIT_REF: ${{ github.head_ref }}
+      PANTHEON_REPO: ${{ secrets.PANTHEON_REPO }}
+    steps:
+      # It's safe to use a checkout here, instead of the cached build, just to
+      # get access to the script.
+      - name: Check out the code
+        uses: actions/checkout@v3
+
+      - name: Set up the SSH key and configuration.
+        uses: shimataro/ssh-key-action@v2.3.1
+        with:
+          key: ${{ secrets.PANTHEON_SSH_KEY }}
+          config: ${{ secrets.SSH_CONFIG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      - name: Create multi-dev-safe branch name.
+        id: safe_branch
+        uses: accessdigital/.github/.github/actions/pantheon-safe-branch@main
+        with:
+          branch_name: ${{ github.head_ref }}
+          strip_prefix: strip_prefix
+          safe_prefix: safe_prefix
+
+      - name: Add Pantheon as a remote.
+        run: |
+          git config --global --add safe.directory $(realpath .)
+          git remote add pantheon $PANTHEON_REPO
+
+      - name: Delete the branch from Pantheon.
+        # Don't mark this as a build fail if the branch doesn't delete.
+        continue-on-error: true
+        run: |
+          git push pantheon --delete ${BRANCH_NAME}
+          echo "🌩️ ${BRANCH_NAME} deleted!" >> $GITHUB_STEP_SUMMARY
