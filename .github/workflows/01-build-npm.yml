@@ -1,4 +1,8 @@
-name: Build and validate Composer.
+# Name: Build an application using Node/NPM.
+# Type: Build task.
+# Use: Using the root package-lock.json, build an application.
+
+name: Build and validate an NPM package.
 
 on:
   workflow_call:
@@ -6,7 +10,7 @@ on:
       directory:
         description: 'The directory in which to run commands'
         type: string
-        default: './'
+        required: true
       container:
         description: 'The docker image to use'
         type: string
@@ -17,15 +21,31 @@ on:
       target_key:
         description: 'The target cache key suffix, or empty to throw away'
         type: string
-        default: 'composer'
+        default: 'npm'
+      target_path:
+        description: 'The target path for the cache'
+        type: string
+        default: './*'
+      target_modules:
+        description: 'Whether to keep the node_modules directory from the target build.'
+        type: boolean
+        default: true
       ssh_config:
         description: 'Indicate we need to run SSH configuration for asset access'
         type: boolean
         default: false
-      composer_options:
-        description: 'Additional options to pass to composer'
-        type: string
-        default: '-o --apcu-autoloader'
+      run_build:
+        description: 'Optionally run `npm run build`'
+        type: boolean
+        default: true
+      check_git:
+        description: 'Optionally check for changes in git tracked files'
+        type: boolean
+        default: true
+      run_tests:
+        description: 'Optionally run `npm run test`'
+        type: boolean
+        default: false
     secrets:
       SSH_KEY:
         description: 'Private SSH key for any authenticated assets'
@@ -39,8 +59,8 @@ defaults:
     shell: bash
 
 jobs:
-  composer-build:
-    name: Build using Composer
+  npm-build:
+    name: Build using npm
     runs-on: ubuntu-latest
     container: ${{ inputs.container }}
     steps:
@@ -53,7 +73,7 @@ jobs:
         uses: actions/cache@v3
         id: target-build
         with:
-          path: ./*
+          path: ${{ inputs.target_path }}
           enableCrossOsArchive: true
           # We are only interested in a direct hit.
           key: build-${{ github.sha }}-${{ inputs.target_key }}
@@ -64,18 +84,16 @@ jobs:
         if: |
           (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
           inputs.source_key != ''
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v3
         id: restore-build
         with:
           path: ./*
-          enableCrossOsArchive: true
           # We are only interested in a direct hit.
           key: build-${{ github.sha }}-${{ inputs.source_key }}
 
       - name: Abort if we have a source build cache miss.
         run: exit 1
         # Skip if we already have a full build.
-        # Only if we have a source key.
         if: |
           (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
           inputs.source_key != '' &&
@@ -83,35 +101,26 @@ jobs:
 
       - name: Checkout the code.
         # Skip if we already have a full build.
-        # Skip if we are using a source build.
         if: |
           (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
           inputs.source_key == ''
         uses: actions/checkout@v3
 
-      - name: Get Composer Cache Directory
-        # Skip if we already have a full build.
-        if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true')
-        run: |
-          echo "ACTIONS_COMPOSER_CACHE_DIR=$(composer config cache-dir)" >> $GITHUB_ENV
-
-      - name: Preserve the composer cache.
+      - name: Preserve the npm cache.
         # Skip if we already have a full build.
         if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true')
         uses: actions/cache@v3
         with:
-          path: ${{ env.ACTIONS_COMPOSER_CACHE_DIR }}
+          path: |
+            ~/.npm
+            ~/.nvm
           enableCrossOsArchive: true
           # Save the cache with the hash of the lock files.
-          key: composer-${{ hashFiles('**/composer.lock') }}
-          # If there is no direct hit, restore the latest composer-* cache. This
-          # will first look on the current branch, then on the parent/default
-          # branch.
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          # If there is no direct hit, restore the latest npm-* cache. This will
+          # first look on the current branch, then on the parent/default branch.
           restore-keys: |
-            composer-
-
-      - name: Validate the lock file.
-        run: composer -d "${{ inputs.directory }}" validate --no-check-all --ansi
+            npm-
 
       - name: Set up the SSH key and configuration.
         # Skip if we already have a full build.
@@ -125,13 +134,30 @@ jobs:
           config: ${{ secrets.SSH_CONFIG }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
-      - name: Install composer dependencies.
+      - name: Install dependencies.
         # Skip if we already have a full build.
         if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true')
-        run: composer -d "${{ inputs.directory }}" install --no-progress ${{ inputs.composer_options }}
+        run: npm --prefix "${{ inputs.directory }}" ci
+
+      - name: Run the build.
+        # Skip if we already have a full build.
+        if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.run_build
+        run: npm --prefix "${{ inputs.directory }}" run build
 
       - name: Check for changes to committed code.
+        # Skip if we already have a full build.
+        if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.check_git
         run: |
-          git config --global --add safe.directory $(realpath .)
-          git diff ${{ inputs.directory }}
-          git diff-index --quiet HEAD -- ${{ inputs.directory }}
+          git diff "${{ inputs.directory }}"
+          git diff-index --quiet HEAD "${{ inputs.directory }}"
+
+      - name: Run tests.
+        if: inputs.run_tests
+        run: npm --prefix "${{ inputs.directory }}" run test
+
+      - name: Remove node_modules from the target build.
+        # Only run if we have a target build and we don't want to keep node_modules.
+        if: (inputs.target_key != '' && inputs.target_modules != true)
+        run: rm -rf "${{ inputs.directory }}/node_modules"

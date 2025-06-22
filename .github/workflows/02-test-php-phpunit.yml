@@ -1,0 +1,70 @@
+# Name: Run PHPUnit tests.
+# Type: Test.
+# Use: Run automated tests during builds using PHPUnit.
+
+name: PHPUnit
+
+on:
+  workflow_call:
+    inputs:
+      directory:
+        description: 'The directory to run in'
+        type: string
+        default: './'
+      container:
+        description: 'The docker image to use'
+        type: string
+        required: true
+      source_key:
+        description: 'The source cache key suffix'
+        type: string
+        default: 'composer'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  phpcs:
+    name: 'PHPUnit'
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    services:
+      db:
+        image: mysql:5.7
+        ports: [ 3306 ]
+        env:
+          MYSQL_USER: db
+          MYSQL_PASSWORD: db
+          MYSQL_DATABASE: db
+          MYSQL_ROOT_PASSWORD: root
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+    steps:
+      - name: Restore build from a previous step.
+        uses: actions/cache/restore@v3
+        id: restore-build
+        with:
+          path: ./*
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Start the PHP server.
+        run: |
+          cd ${{ inputs.directory }}
+          php -S 127.0.0.1:8888 .ht.router.php > /tmp/php-log.txt 2>&1 &
+
+      - name: Run PHPUnit.
+        env:
+          SIMPLETEST_DB: 'mysql://db:db@db:3306/db'
+          SIMPLETEST_BASE_URL: 'http://127.0.0.1:8888'
+        run: |
+          cd ${{ inputs.directory }}
+          ./vendor/bin/phpunit
+
+      - name: Output PHP logs on error.
+        if: failure()
+        run: cat /tmp/php-log.txt
