@@ -3,7 +3,7 @@
 # Use: Without building an artefact first, deploy a branch to a remove
 # environment, and allow the host to perform build tasks.
 
-name: Deploy via a git branch.
+name: Deploy via a Git branch.
 
 on:
   workflow_call:
@@ -17,21 +17,21 @@ on:
         type: boolean
         default: false
       git_name:
-        description: 'The git committer name'
+        description: 'The Git committer name'
         type: string
         required: true
       git_email:
-        description: 'The git committer email'
+        description: 'The Git committer email'
         type: string
         required: true
     secrets:
-      GIT_ACCESS_TOKEN:
-        description: 'The write access token for the git repo. Required for github repo.'
+      GITHUB_WRITE_TOKEN:
+        description: 'The write access token for the Git repo. Required for GitHub repo.'
         required: false
-      TARGET_REPO:
+      REMOTE_REPO:
         description: 'URL of the target repo. Required for remote repo.'
         required: false
-      TARGET_SSH_KEY:
+      REMOTE_SSH_KEY:
         description: 'Private SSH key authorised to push to the target repo. Required for remote repo.'
         required: false
       SSH_CONFIG:
@@ -55,7 +55,7 @@ jobs:
         if: ${{ !inputs.remote_repo }}
         with:
           fetch-depth: 0
-          token: ${{ secrets.GIT_ACCESS_TOKEN }}
+          token: ${{ secrets.GITHUB_WRITE_TOKEN }}
 
       - name: Check out the code without a token
         uses: actions/checkout@v3
@@ -67,14 +67,14 @@ jobs:
         if: ${{ inputs.remote_repo }}
         uses: shimataro/ssh-key-action@v2.3.1
         with:
-          key: ${{ secrets.TARGET_SSH_KEY }}
+          key: ${{ secrets.REMOTE_SSH_KEY }}
           config: ${{ secrets.SSH_CONFIG }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
       - name: Fetch the remote branches
         if: ${{ inputs.remote_repo }}
         run: |
-          git remote add target ${{ secrets.TARGET_REPO }}
+          git remote add target ${{ secrets.REMOTE_REPO }}
           git fetch target
 
       - name: Checkout the target branch, creating if necessary
@@ -117,7 +117,7 @@ jobs:
           GIT_COMMITTER_EMAIL: ${{ inputs.git_email }}
         run: git commit -m "Release ${GITHUB_REF:10}" --allow-empty
 
-      - name: Push the branch to github
+      - name: Push the branch to GitHub
         if: ${{ !inputs.remote_repo }}
         run: git push origin ${{ inputs.branch }}
 

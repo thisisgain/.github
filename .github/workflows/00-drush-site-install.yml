@@ -45,7 +45,7 @@ jobs:
           MYSQL_ROOT_PASSWORD: root
         options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
     steps:
-      - name: Disable git safe directories as we are in a container.
+      - name: Disable Git safe directories as we are in a container.
         run: git config --global --add safe.directory '*'
 
       - name: Restore build from a previous step.

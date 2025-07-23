@@ -17,7 +17,7 @@ on:
         required: false
         default: '8.2'
     secrets:
-      ENVIRONMENT_ID:
+      ACQUIA_ENVIRONMENT_ID:
         description: 'Acquia environment ID.'
         required: true
       ACLI_CLIENT_ID:
@@ -69,7 +69,7 @@ jobs:
           # to the name value only.
           database_list=$(php acli.phar api:environments:database-list \
             --filter='${{ inputs.filter }}' \
-            ${{ secrets.ENVIRONMENT_ID }} \
+            ${{ secrets.ACQUIA_ENVIRONMENT_ID }} \
             | jq '.[] | .name')
 
           # Processes the output of databases to allow the data to
@@ -91,7 +91,7 @@ jobs:
           while [ $i -lt ${#backup_array[@]} ]; do
             php acli.phar api:environments:database-backup-create \
               --no-interaction \
-              ${{ secrets.ENVIRONMENT_ID }} \
+              ${{ secrets.ACQUIA_ENVIRONMENT_ID }} \
               ${backup_array[$i]} \
               && echo "💧 Successfully backed up database "${backup_array[$i]}"." \
               || echo "❌ Error backing up database "${backup_array[$i]}". See logs."

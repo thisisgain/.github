@@ -39,7 +39,7 @@ on:
         type: boolean
         default: true
       check_git:
-        description: 'Optionally check for changes in git tracked files'
+        description: 'Optionally check for changes in Git tracked files'
         type: boolean
         default: true
       run_tests:
@@ -47,7 +47,7 @@ on:
         type: boolean
         default: false
     secrets:
-      SSH_KEY:
+      REMOTE_SSH_KEY:
         description: 'Private SSH key for any authenticated assets'
       SSH_CONFIG:
         description: 'SSH configuration'
@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ${{ inputs.container }}
     steps:
-      - name: Disable git safe directories as we are in a container.
+      - name: Disable Git safe directories as we are in a container.
         run: git config --global --add safe.directory '*'
 
       - name: Set up the build cache.
@@ -130,7 +130,7 @@ jobs:
           inputs.ssh_config
         uses: shimataro/ssh-key-action@v2.3.1
         with:
-          key: ${{ secrets.SSH_KEY }}
+          key: ${{ secrets.REMOTE_SSH_KEY }}
           config: ${{ secrets.SSH_CONFIG }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
