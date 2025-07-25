@@ -157,9 +157,6 @@ useful across multiple projects.
 
 ### Running a workflow
 
-> Useful docs:
-> * [Events that trigger workflows][2]
-
 Depending on the way you set up the workflow within your own repository, the
 workflows will run as defined, and are made up of one or many events and any
 activity types/filters. A single workflow can be triggered by multiple events:
@@ -312,12 +309,14 @@ what options there are for each workflow. This is a short list of some examples:
 
 * [GitHub Actions documentation][1]
 * [Events that trigger workflows][2]
-* [Acquia CLI tool documentation][3]
-* [Pantheon Terminus CLI tool documentation][4]
+* [Using secrets in GitHub actions][3]
+* [Acquia CLI tool documentation][4]
+* [Pantheon Terminus CLI tool documentation][5]
 
 ---
 
 [1]: https://docs.github.com/en/actions
 [2]: https://docs.github.com/en/actions/reference/events-that-trigger-workflows
-[3]: https://docs.acquia.com/acquia-cloud-platform/add-ons/acquia-cli/overview
-[4]: https://docs.pantheon.io/terminus
+[3]: https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions
+[4]: https://docs.acquia.com/acquia-cloud-platform/add-ons/acquia-cli/overview
+[5]: https://docs.pantheon.io/terminus

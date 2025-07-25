@@ -81,7 +81,6 @@ jobs:
 
       - name: Backing up databases
         run: |
-
           # Split database_list into an array.
           IFS=', ' read -r -a backup_array <<< "${{ steps.get_databases.outputs.database_list }}"
 

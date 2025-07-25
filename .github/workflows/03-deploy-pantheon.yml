@@ -1,7 +1,8 @@
 # Name: Deploy code to Pantheon.
 # Type: Deploy.
-# Use: Push a branch to a Pantheon environment, so that a multidev environment
-# can be manually created.
+# Use: Push a branch to a Pantheon environment. If multidev_safe is set, a safe
+# branch name will be created on Pantheon first, so that a multidev environment
+# can be created.
 
 name: Workflow to push code to Pantheon.
 
@@ -74,7 +75,7 @@ jobs:
       - name: Create multi-dev-safe branch name.
         if: inputs.multidev_safe
         id: safe_branch
-        uses: accessdigital/.github/.github/actions/pantheon-safe-branch@main
+        uses: thisisgain/.github/.github/actions/pantheon-safe-branch@main
         with:
           branch_name: ${{ env.BRANCH_NAME }}
           strip_prefix: ${{ inputs.strip_prefix }}
