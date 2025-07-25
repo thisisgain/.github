@@ -1,0 +1,39 @@
+name: "Example workflow: Deploy code to Pantheon"
+
+# This workflow will push code directly to Pantheon. Pantheon has its own tool,
+# Quicksilver, that builds Composer dependencies when code is deployed.
+#
+# @see ./build-deploy-pantheon-multidev.yml
+
+on:
+  # Allow manual trigger.
+  workflow_dispatch:
+  # Pantheon still uses the master branch, and deployments are made through the
+  # UI, with tags generated on Pantheon directly. This can only act on the
+  # mater branch.
+  push:
+    branches:
+      - master
+
+defaults:
+  run:
+    shell: bash
+
+# Wait for any previous jobs to finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  # Push the code to the remote repository.
+  push-code:
+    name: 'Deploy: push code to Pantheon.'
+    uses: thisisgain/.github/.github/workflows/pantheon-push-code.yml@main
+    with:
+      # The commit details should be an automation account, with a shared email;
+      # the SSH config in secrets use these credentials, and the user should be
+      # able to access the remote repo (eg add as a user).
+      git_name: GAIN Automation
+      git_email: gain.automation+client.gha@thisisgain.com
+    # If the repository is in the GAIN GitHub, you can use this shortcut to pass
+    # all secrets through without needing to define them.
+    secrets: inherit

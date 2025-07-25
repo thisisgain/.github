@@ -1,0 +1,86 @@
+name: "Example workflow: Build and deploy an artefact to a remote repository"
+
+# This workflow will:
+# - Build a complete artefact (downloading all dependencies, and running any
+#   front-end build commands).
+# - Remove any unneeded build files.
+# - Check out the code from the remote repository.
+# - Commit the complete artefact and push it to the remote repository.
+#
+# It performs no actions on the remote repository, making it an ideal workflow
+# for pushing to environments like Acquia, allowing additional build hooks to
+# run on the environment directly.
+#
+# @see ./build-deploy-remote-repository.yml
+
+on:
+  # When code is merged into a branch, it is recorded as a "push" to that
+  # branch. Equally, when a tag is created, it is recorded as a "push".
+  push:
+    # The main development branch, and a regex for release branches.
+    branches:
+      - main
+      - '*.*.x'
+    # Any and all tags that are created.
+    tags:
+      - '*'
+
+defaults:
+  run:
+    shell: bash
+
+# Wait for any previous jobs to finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  # Download dependencies to build a project using a Composer lockfile.
+  composer-build:
+    name: 'Build: Composer dependencies.'
+    uses: thisisgain/.github/.github/workflows/composer.yml@main
+    with:
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+
+  # Install node dependencies and run the build commands in the custom theme.
+  theme-build:
+    name: 'Build: theme dependencies.'
+    needs: composer-build
+    uses: thisisgain/.github/.github/workflows/npm.yml@main
+    with:
+      directory: 'docroot/themes/custom/custom_theme'
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      source_key: composer
+      target_key: theme
+
+  # Commit and push the code to the remote repository.
+  push-code:
+    name: 'Deploy: push artefact to repository.'
+    needs: theme-build
+    uses: thisisgain/.github/.github/workflows/push-code.yml@main
+    with:
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      # The commit details should be an automation account, with a shared email;
+      # the SSH config in secrets use these credentials, and the user should be
+      # able to access the remote repo (eg add as a user).
+      git_name: GAIN Automation
+      git_email: gain.automation+client.gha@thisisgain.com
+      source_key: theme
+      # Skip adding the default set of files.
+      add_files_defaults: false
+      # Add these files to the artefact specifically.
+      add_files: >-
+        vendor/
+        docroot/.htaccess
+        docroot/index.php
+        docroot/autoload.php
+        docroot/*/
+      # Remove these files before committing.
+      remove_files: >-
+        cypress/ postman/ tests/ cypress.json
+        docroot/themes/custom/custom_theme/node_modules/
+    secrets:
+      ARTEFACT_REPO: ${{ secrets.ACQUIA_REPO }}
+      ARTEFACT_SSH_KEY: ${{ secrets.SSH_KEY }}
+      SSH_CONFIG: ''
+      KNOWN_HOSTS: ${{ secrets.SSH_HOSTKEYS_ACQUIA }}
+      GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
