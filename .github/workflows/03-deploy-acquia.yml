@@ -54,12 +54,11 @@ on:
         required: true
       SSH_CONFIG:
         description: 'SSH configuration'
-        required: true
       KNOWN_HOSTS:
         description: 'SSH known hosts'
         required: true
       GITHUB_READ_TOKEN:
-        description: 'The GitHub token, required for the unshallow fetch'
+        description: 'The read acces token for Github, required for the unshallow fetch'
         required: true
 
 defaults:

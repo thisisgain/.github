@@ -30,7 +30,6 @@ on:
         required: true
       SSH_CONFIG:
         description: 'SSH configuration'
-        required: true
       KNOWN_HOSTS:
         description: 'SSH known hosts'
         required: true
@@ -69,7 +68,7 @@ jobs:
           php-version: '8.2'
 
       - name: Install Terminus.
-        uses: pantheon-systems/terminus-github-actions@1.0.0
+        uses: pantheon-systems/terminus-github-actions@v1
         with:
           pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
 

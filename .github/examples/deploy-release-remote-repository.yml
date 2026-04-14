@@ -60,5 +60,5 @@ jobs:
     secrets:
       TARGET_REPO: ${{ secrets.REMOTE_REPO }}
       TARGET_SSH_KEY: ${{ secrets.REMOTE_SSH_KEY }}
-      SSH_CONFIG: ''
+      SSH_CONFIG: ${{ secrets.SSH_CONFIG }}
       KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}

@@ -25,21 +25,16 @@ on:
         type: string
         required: true
     secrets:
-      GITHUB_WRITE_TOKEN:
+      GITHUB_ACCESS_TOKEN:
         description: 'The write access token for the Git repo. Required for GitHub repo.'
-        required: false
       REMOTE_REPO:
         description: 'URL of the target repo. Required for remote repo.'
-        required: false
       REMOTE_SSH_KEY:
         description: 'Private SSH key authorised to push to the target repo. Required for remote repo.'
-        required: false
       SSH_CONFIG:
         description: 'SSH configuration. Required for remote repo.'
-        required: false
       KNOWN_HOSTS:
         description: 'SSH known hosts. Required for remote repo.'
-        required: false
 
 defaults:
   run:
@@ -55,7 +50,7 @@ jobs:
         if: ${{ !inputs.remote_repo }}
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_WRITE_TOKEN }}
+          token: ${{ secrets.GITHUB_ACCESS_TOKEN }}
 
       - name: Check out the code without a token
         uses: actions/checkout@v3

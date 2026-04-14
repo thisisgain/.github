@@ -79,8 +79,8 @@ jobs:
         cypress/ postman/ tests/ cypress.json
         docroot/themes/custom/custom_theme/node_modules/
     secrets:
-      ARTEFACT_REPO: ${{ secrets.ACQUIA_REPO }}
-      ARTEFACT_SSH_KEY: ${{ secrets.SSH_KEY }}
-      SSH_CONFIG: ''
-      KNOWN_HOSTS: ${{ secrets.SSH_HOSTKEYS_ACQUIA }}
-      GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REMOTE_REPO: ${{ secrets.REMOTE_REPO }}
+      REMOTE_SSH_KEY: ${{ secrets.REMOTE_SSH_KEY }}
+      SSH_CONFIG: ${{ secrets.SSH_CONFIG }}
+      KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
+      GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_WRITE_TOKEN }}

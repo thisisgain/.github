@@ -18,7 +18,11 @@ certain things that will need to be implemented differently.
 
 | Previous name | New name |
 | ------------- | -------- |
-| woo hoo | woo hoo |
+| `ACQUIA_REPO` | `REMOTE_REPO` |
+| `SSH_KEY` | `REMOTE_SSH_KEY` |
+| `SSH_HOSTKEYS_ACQUIA` | `KNOWN_HOSTS` |
+| `GITHUB_TOKEN` | Either `GITHUB_WRITE_TOKEN` or `GITHUB_READ_TOKEN` |
+| `PROD_ENVIRONMENT_ID` | `ACQUIA_ENVIRONMENT_ID` |
 
 ### Workflow names
 
@@ -31,3 +35,9 @@ certain things that will need to be implemented differently.
 | Previous setting | New setting |
 | ---------------- | ----------- |
 | woo hoo       | woo hoo  |
+
+## Eleven Miles/Bitbucket
+
+...
+
+## Catch Digital/Bitbucket

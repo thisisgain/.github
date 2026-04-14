@@ -20,7 +20,6 @@ on:
         required: true
       SSH_CONFIG:
         description: 'SSH configuration'
-        required: true
       KNOWN_HOSTS:
         description: 'SSH known hosts'
         required: true

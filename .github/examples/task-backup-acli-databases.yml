@@ -27,6 +27,6 @@ jobs:
       # can be added here, if needs be.
       filter: 'name!@*dev;name!@*test'
     secrets:
-      ENVIRONMENT_ID: ${{ secrets.PROD_ENVIRONMENT_ID }}
+      ENVIRONMENT_ID: ${{ secrets.ACQUIA_ENVIRONMENT_ID }}
       ACLI_CLIENT_ID: ${{ secrets.ACLI_CLIENT_ID }}
       ACLI_CLIENT_SECRET: ${{ secrets.ACLI_CLIENT_SECRET }}
