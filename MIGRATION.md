@@ -19,9 +19,13 @@ certain things that will need to be implemented differently.
 | Previous name | New name |
 | ------------- | -------- |
 | `ACQUIA_REPO` | `REMOTE_REPO` |
+| `TARGET_REPO` | `REMOTE_REPO` |
+| `TARGET_SSH_KEY` | `REMOTE_SSH_KEY` |
 | `SSH_KEY` | `REMOTE_SSH_KEY` |
 | `SSH_HOSTKEYS_ACQUIA` | `KNOWN_HOSTS` |
 | `GITHUB_TOKEN` | Either `GITHUB_WRITE_TOKEN` or `GITHUB_READ_TOKEN` |
+| `GITHUB_ACCESS_TOKEN` | Either `GITHUB_WRITE_TOKEN` or `GITHUB_READ_TOKEN` |
+| `ENVIRONMENT_ID` | `ACQUIA_ENVIRONMENT_ID` |
 | `PROD_ENVIRONMENT_ID` | `ACQUIA_ENVIRONMENT_ID` |
 
 ### Workflow inputs

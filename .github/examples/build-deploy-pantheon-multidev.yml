@@ -8,6 +8,8 @@ name: "Example workflow: Deploy code to Pantheon multidev"
 # desired behaviour, so it can be limited by checking the labels on a pull
 # request.
 #
+# This action is triggered if a "Build" label is added to a pull request.
+#
 # @see ./deploy-pantheon-default.yml
 # @see ./task-pantheon-remove-multidev.yml
 

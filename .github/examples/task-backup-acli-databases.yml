@@ -5,7 +5,7 @@ name: "Example workflow: Back up production database using ACLI"
 # place, especially for Site Factory sites.
 #
 # It can run before or after code has been deployed to Acquia, but the code
-# shouldn't be switched in the Acqui UI until after this has completed
+# shouldn't be switched in the Acquia UI until after this has completed
 # successfully.
 
 on:
@@ -27,6 +27,6 @@ jobs:
       # can be added here, if needs be.
       filter: 'name!@*dev;name!@*test'
     secrets:
-      ENVIRONMENT_ID: ${{ secrets.ACQUIA_ENVIRONMENT_ID }}
+      ACQUIA_ENVIRONMENT_ID: ${{ secrets.ACQUIA_ENVIRONMENT_ID }}
       ACLI_CLIENT_ID: ${{ secrets.ACLI_CLIENT_ID }}
       ACLI_CLIENT_SECRET: ${{ secrets.ACLI_CLIENT_SECRET }}

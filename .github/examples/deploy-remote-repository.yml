@@ -22,9 +22,9 @@ concurrency:
 jobs:
   deploy:
     name: 'Deploy: push code to remote environment.'
-    uses: thisisgain/.github/.github/workflows/push-git.yml@main
+    uses: thisisgain/.github/.github/workflows/03-deploy-git-push.yml@main
     secrets:
-      TARGET_REPO: ${{ secrets.REMOTE_REPO }}
-      TARGET_SSH_KEY: ${{ secrets.REMOTE_SSH_KEY }}
+      REMOTE_REPO: ${{ secrets.REMOTE_REPO }}
+      REMOTE_SSH_KEY: ${{ secrets.REMOTE_SSH_KEY }}
       SSH_CONFIG: ${{ secrets.SSH_CONFIG }}
       KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}

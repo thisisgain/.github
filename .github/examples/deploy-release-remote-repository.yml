@@ -25,7 +25,7 @@ on:
     inputs:
       # The person running the workflow must choose a branch. Running this
       # workflow will deploy that branch to the remote repository.
-      branch:
+      target_branch:
         type: choice
         description: Target environment
         # These can be updated with whatever branches you have in your project.
@@ -51,13 +51,13 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     uses: thisisgain/.github/.github/workflows/03-deploy-git-update.yml@main
     with:
-      branch: ${{ inputs.branch }}
-      remote_repo: true
+      target_branch: ${{ inputs.target_branch }}
+      push_to_remote: true
       # The committer in this case is the user who triggered the workflow.
       git_name: ${{ github.event.sender.login }}
       git_email: ${{ github.event.sender.id }}+${{ github.event.sender.login }}@users.noreply.github.com
     secrets:
-      TARGET_REPO: ${{ secrets.REMOTE_REPO }}
-      TARGET_SSH_KEY: ${{ secrets.REMOTE_SSH_KEY }}
+      REMOTE_REPO: ${{ secrets.REMOTE_REPO }}
+      REMOTE_SSH_KEY: ${{ secrets.REMOTE_SSH_KEY }}
       SSH_CONFIG: ${{ secrets.SSH_CONFIG }}
       KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
