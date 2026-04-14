@@ -132,7 +132,7 @@ they occur:
 * `03`: Deploy tasks.
 * `04`: Ongoing scan tasks. _(There are none of these currently.)_
 
-Therefore to build an artefact, run tests, and deploy to an environment, you
+Therefore to build an artifact, run tests, and deploy to an environment, you
 would need:
 
 * One or more "build" tasks (eg `01-build-composer`)
@@ -304,7 +304,7 @@ what options there are for each workflow. This is a short list of some examples:
 | `00-pantheon-remove-branch` | `strip_prefix` | _None_ | A prefix to strip when generating a safe branch name. |
 | `01-build-npm` | `run_build` | `true` | Run `npm run build` command when this job runs. |
 | `02-test-php-analysis` | `phpcs` | `true` | Run PHP Coding Standards checks. |
-| `03-deploy-git-artefact` | `target_ref` | _None_ | An optional target reference to push code to. |
+| `03-deploy-git-artifact` | `target_ref` | _None_ | An optional target reference to push code to. |
 
 ## Further reading
 

@@ -5,7 +5,7 @@ run-name: Deploying ${{ github.ref_name }}
 # performing any build tasks, on the basis that the remote repository will
 # perform its own build tasks (eg installing dependencies, building a theme).
 #
-# @see ./build-deploy-artefact-remote-repository.yml
+# @see ./build-deploy-artifact-remote-repository.yml
 
 on:
   # When a pull request is merged, this counts as a "push".

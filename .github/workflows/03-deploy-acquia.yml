@@ -1,9 +1,9 @@
-# Name: Deploy an artefact to Acquia.
+# Name: Deploy an artifact to Acquia.
 # Type: Deploy.
-# Use: Having built an artefact using the build workflows, deploy it to an
+# Use: Having built an artifact using the build workflows, deploy it to an
 # Acquia environment.
 
-name: Push a build artefact.
+name: Push a build artifact.
 
 on:
   workflow_call:
@@ -47,10 +47,10 @@ on:
         default: '-o --apcu-autoloader'
     secrets:
       REMOTE_REPO:
-        description: 'URL of the artefact repo.'
+        description: 'URL of the artifact repo.'
         required: true
       REMOTE_SSH_KEY:
-        description: 'Private SSH key authorised to push to the artefact repo'
+        description: 'Private SSH key authorised to push to the artifact repo'
         required: true
       SSH_CONFIG:
         description: 'SSH configuration'
@@ -67,7 +67,7 @@ defaults:
 
 jobs:
   push-code:
-    name: 'Push artefact to repo'
+    name: 'Push artifact to repo'
     runs-on: ubuntu-latest
     container: ${{ inputs.container }}
     env:
@@ -114,10 +114,10 @@ jobs:
           config: ${{ secrets.SSH_CONFIG }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
-      - name: Add & fetch the artefact repo.
+      - name: Add & fetch the artifact repo.
         run: |
-          git remote add artefact ${{ secrets.REMOTE_REPO }}
-          git fetch artefact
+          git remote add artifact ${{ secrets.REMOTE_REPO }}
+          git fetch artifact
 
       - name: Ensure we have an un-shallow fetch.
         # At some replace this with trying to build on top of the parent when
@@ -126,18 +126,18 @@ jobs:
           git remote set-url origin $(git remote get-url origin | sed 's#https://#https://${{ secrets.GITHUB_READ_TOKEN }}:${{ secrets.GITHUB_READ_TOKEN }}@#')
           git fetch --unshallow origin
 
-      - name: Checkout artefact branch without changing local files.
+      - name: Checkout artifact branch without changing local files.
         if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pull/')
         run: |
           git checkout -b ${COMMIT_REF:11}-build
-          git reset --soft artefact/${COMMIT_REF:11}-build || true
+          git reset --soft artifact/${COMMIT_REF:11}-build || true
 
-      - name: Checkout tag's artefact branch without changing local files.
+      - name: Checkout tag's artifact branch without changing local files.
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           rawbranch=$(git branch -r --contains ${COMMIT_REF:10} | grep -Eo 'origin/[^ ]+$' | head -n 1)
           branch=${rawbranch/origin\/}
-          git reset --soft artefact/${branch}-build || true
+          git reset --soft artifact/${branch}-build || true
 
       - name: Remove nested Git directories.
         run: find . -mindepth 2 -type d -name .git | xargs rm -rf
@@ -162,7 +162,7 @@ jobs:
         if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pull/')
         run: |
           git commit --allow-empty -m "[BUILD ${COMMIT_SHA:0:7}] $COMMIT_MSG"
-          git push artefact HEAD
+          git push artifact HEAD
           echo "🏗 Branch ${COMMIT_REF:11}-build pushed!" >> $GITHUB_STEP_SUMMARY
 
       - name: Deploy the artifact for tags
@@ -170,5 +170,5 @@ jobs:
         run: |
           git commit --allow-empty -m "[BUILD ${COMMIT_SHA:0:7}] Tag ${COMMIT_REF:10}"
           git tag ${COMMIT_REF:10}-build
-          git push artefact ${COMMIT_REF:10}-build
+          git push artifact ${COMMIT_REF:10}-build
           echo "🏗 Tag ${COMMIT_REF:10}-build pushed!" >> $GITHUB_STEP_SUMMARY

@@ -1,9 +1,9 @@
-# Name: Deploy an artefact to Acquia using BLT.
+# Name: Deploy an artifact to Acquia using BLT.
 # Type: Deploy.
-# Use: Use BLT commands to deploy an artefact to an Acquia environment.
+# Use: Use BLT commands to deploy an artifact to an Acquia environment.
 # Note: BLT is deprecated and the use of this command is discouraged.
 
-name: Build & push BLT artefact.
+name: Build & push BLT artifact.
 
 on:
   workflow_call:
@@ -21,7 +21,7 @@ on:
         type: string
         required: true
       dry_run:
-        description: 'Whether this should be a dry-run only (no push to artefact repo)'
+        description: 'Whether this should be a dry-run only (no push to artifact repo)'
         type: boolean
         required: true
       source_key:
@@ -29,7 +29,7 @@ on:
         type: string
     secrets:
       REMOTE_SSH_KEY:
-        description: 'Private SSH key authorised to push to the artefact repo.'
+        description: 'Private SSH key authorised to push to the artifact repo.'
         required: true
       SSH_CONFIG:
         description: 'SSH configuration'
@@ -43,7 +43,7 @@ defaults:
 
 jobs:
   push-code:
-    name: 'Build artefact and push to repo'
+    name: 'Build artifact and push to repo'
     runs-on: ubuntu-latest
     container: ${{ inputs.container }}
     env:
@@ -94,7 +94,7 @@ jobs:
         run: |
           echo "ACTIONS_COMPOSER_CACHE_DIR=$(composer config cache-dir)" >> $GITHUB_ENV
 
-      - name: Preserve the composer cache.
+      - name: Preserve the Composer cache.
         uses: actions/cache@v5
         with:
           path: ${{ env.ACTIONS_COMPOSER_CACHE_DIR }}
@@ -107,7 +107,7 @@ jobs:
           restore-keys: |
             composer-
 
-      - name: Preserve the npm cache.
+      - name: Preserve the NPM cache.
         uses: actions/cache@v5
         with:
           path: |

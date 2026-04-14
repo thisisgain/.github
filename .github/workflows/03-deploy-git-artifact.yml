@@ -1,6 +1,6 @@
-# Name: Deploy an artefact using Git.
+# Name: Deploy an artifact using Git.
 # Type: Deploy.
-# Use: Deploy a fully-build artefact to a remote environment.
+# Use: Deploy a fully-build artifact to a remote environment.
 
 name: Push a Git branch
 

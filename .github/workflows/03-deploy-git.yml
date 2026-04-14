@@ -1,6 +1,6 @@
 # Name: Deploy a Git branch directly to a remote repository.
 # Type: Deploy.
-# Use: Without building an artefact first, deploy a branch to a remove
+# Use: Without building an artifact first, deploy a branch to a remove
 # environment, and allow the host to perform build tasks.
 
 name: Deploy via a Git branch.
