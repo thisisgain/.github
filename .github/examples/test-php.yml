@@ -25,7 +25,7 @@ jobs:
     name: 'Composer: build project.'
     uses: thisisgain/.github/.github/workflows/01-build-composer.yml@main
     with:
-      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
 
   # Run Composer security scans to check for any vulnerabilities.
   composer-security:
@@ -33,7 +33,7 @@ jobs:
     needs: [composer-build]
     uses: thisisgain/.github/.github/workflows/02-test-composer-security.yml@main
     with:
-      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
 
   # Run PHP static analysis on changes in the code.
   php-analysis:
@@ -41,7 +41,7 @@ jobs:
     needs: [composer-build]
     uses: thisisgain/.github/.github/workflows/02-test-php-analysis.yml@main
     with:
-      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
       phpstan: true
 
   # Run all PHPUnit tests.
@@ -50,4 +50,4 @@ jobs:
     needs: [composer-build]
     uses: thisisgain/.github/.github/workflows/02-test-php-phpunit.yml@main
     with:
-      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20

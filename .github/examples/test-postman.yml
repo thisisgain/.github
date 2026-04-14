@@ -28,7 +28,7 @@ jobs:
     name: 'Composer: build project.'
     uses: thisisgain/.github/.github/workflows/01-build-composer.yml@main
     with:
-      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
 
   # Add the CI settings to the right place.
   settings-build:
@@ -36,7 +36,7 @@ jobs:
     needs: [composer-build]
     uses: thisisgain/.github/.github/workflows/00-create-ci-settings.yml@main
     with:
-      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
 
   # Run Postman tests.
   postman:
@@ -44,7 +44,7 @@ jobs:
     needs: [settings-build]
     uses: thisisgain/.github/.github/workflows/02-test-drupal-postman.yml@main
     with:
-      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
       postman_collection: 'postman/API.postman_collection.json'
       postman_globals: 'postman/ci/API.globals.json'
       postman_run_data: 'postman/ci/API.run_data.json'

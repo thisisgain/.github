@@ -7,7 +7,7 @@ limited to:
 
 * Acquia
 * Pantheon
-* Platform.sh
+* Platform.sh/Upsun
 
 It also includes several boilerplate/example workflows that can be used as a
 starting point for building your own GitHub Actions workflows.
@@ -67,26 +67,26 @@ All workflow files start with the same basic structure:
 name: Workflow name
 run-name: Workflow action for ${{ github.ref_name }}
 
-The action(s) that will start the workflow.
+# The action(s) that will start the workflow.
 on:
   push:
     branches:
       - main
 
-Set a default shell.
+# Set a default shell.
 defaults:
   run:
     shell: bash
 
-Wait for previous jobs to finish.
+# Wait for previous jobs to finish.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
-Here is where you will add the composable jobs.
+# Here is where you will add the composable jobs.
 jobs:
   shortname:
     name: 'My job'
-    ...
+    # ...
 ```
 
 ### Adding jobs to a workflow
@@ -103,7 +103,7 @@ jobs:
     name: 'Composer build'
     uses: thisisgain/.github/.github/workflows/01-build-composer.yml@main
     with:
-      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
 ```
 
 You can mark any action as needing an earlier action in order to run. In this
@@ -115,7 +115,7 @@ phpunit:
   needs: [composer-build]
   uses: thisisgain/.github/.github/workflows/02-test-php-phpunit.yml@main
   with:
-    container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+    container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
 ```
 
 You can combine any of these preset workflows with custom workflows within the
@@ -126,7 +126,7 @@ same file.
 The workflow files have been named according to where in a build/deploy process
 they occur:
 
-* `00`: Helper workflows.
+* `00`: Helper workflows/tasks.
 * `01`: Build tasks.
 * `02`: Test tasks.
 * `03`: Deploy tasks.
@@ -137,7 +137,7 @@ would need:
 
 * One or more "build" tasks (eg `01-build-composer`)
 * One or more "test" tasks (eg `02-test-php-analysis`)
-* One or more "deploy" tasks (eg `03-deploy-acquia`)
+* One or more "deploy" tasks (eg `03-deploy-artifact`)
 
 Helper tasks may run independently of CI, eg on a regular (cron) cycle or only
 when triggered manually, but they can be used within workflows as well.
@@ -245,6 +245,28 @@ but the value will differ.
 | `PANTHEON_MACHINE_NAME`  | The machine name for the Pantheon project. |
 | `PANTHEON_MACHINE_TOKEN` | A machine token authorised to interact with the Pantheon project via Terminus. |
 
+Some workflows may need additional configuration to be set during runtime. If an
+input variable is marked as a secret, it will come from the Github secrets.
+Secret values should not be used to populate regular inputs. See the individual
+workflows to find out what input variables are available for customising the
+build:
+
+```yml
+deploy:
+  name: 'Deploy: push code to remote environment.'
+  uses: thisisgain/.github/.github/workflows/03-deploy-git-update.yml@main
+  with:
+    target_branch: ${{ inputs.target_branch }}
+    push_to_remote: true
+    git_name: ${{ github.event.sender.login }}
+    git_email: ${{ github.event.sender.id }}+${{ github.event.sender.login }}@users.noreply.github.com
+  secrets:
+    REMOTE_REPO: ${{ secrets.REMOTE_REPO }}
+    REMOTE_SSH_KEY: ${{ secrets.REMOTE_SSH_KEY }}
+    SSH_CONFIG: ${{ secrets.SSH_CONFIG }}
+    KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
+```
+
 ## Customising jobs
 
 Most of the jobs are configurable, so if there's something you do/don't want
@@ -256,12 +278,12 @@ php-analysis:
   needs: [composer-build]
   uses: thisisgain/.github/.github/workflows/02-test-php-analysis.yml@main
   with:
-    container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+    container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
     phpstan: true
 ```
 
-If a job is configurable, it will include a section at the top of the file with
-a number of inputs:
+If a job is configurable, it will include a section at the top of the workflow
+file with a number of inputs:
 
 ```yml
 on:
@@ -304,7 +326,7 @@ what options there are for each workflow. This is a short list of some examples:
 | `00-pantheon-remove-branch` | `strip_prefix` | _None_ | A prefix to strip when generating a safe branch name. |
 | `01-build-npm` | `run_build` | `true` | Run `npm run build` command when this job runs. |
 | `02-test-php-analysis` | `phpcs` | `true` | Run PHP Coding Standards checks. |
-| `03-deploy-git-artifact` | `target_ref` | _None_ | An optional target reference to push code to. |
+| `03-deploy-artifact` | `target_ref` | _None_ | An optional target reference to push code to. |
 
 ## Further reading
 
@@ -313,6 +335,7 @@ what options there are for each workflow. This is a short list of some examples:
 * [Using secrets in GitHub actions][3]
 * [Acquia CLI tool documentation][4]
 * [Pantheon Terminus CLI tool documentation][5]
+* [Bitbucket Pipelines to Github Actions migration][6]
 
 ---
 
@@ -321,3 +344,4 @@ what options there are for each workflow. This is a short list of some examples:
 [3]: https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions
 [4]: https://docs.acquia.com/acquia-cloud-platform/add-ons/acquia-cli/overview
 [5]: https://docs.pantheon.io/terminus
+[6]: https://docs.github.com/en/actions/tutorials/migrate-to-github-actions/automated-migrations/bitbucket-pipelines-migration

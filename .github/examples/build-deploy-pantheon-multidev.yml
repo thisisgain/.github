@@ -38,7 +38,7 @@ jobs:
     name: 'Build: Composer dependencies.'
     uses: thisisgain/.github/.github/workflows/01-build-composer.yml@main
     with:
-      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
 
   # Push the code to the remote repository.
   push-code:

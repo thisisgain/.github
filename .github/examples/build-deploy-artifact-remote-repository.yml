@@ -39,7 +39,7 @@ jobs:
     name: 'Build: Composer dependencies.'
     uses: thisisgain/.github/.github/workflows/01-build-composer.yml@main
     with:
-      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
 
   # Install node dependencies and run the build commands in the custom theme.
   theme-build:
@@ -48,7 +48,7 @@ jobs:
     uses: thisisgain/.github/.github/workflows/01-build-npm.yml@main
     with:
       directory: 'docroot/themes/custom/custom_theme'
-      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
       source_key: composer
       target_key: theme
 
@@ -56,9 +56,9 @@ jobs:
   push-code:
     name: 'Deploy: push artifact to repository.'
     needs: theme-build
-    uses: thisisgain/.github/.github/workflows/03-deploy-acquia.yml@main
+    uses: thisisgain/.github/.github/workflows/03-deploy-artifact.yml@main
     with:
-      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
       # The commit details should be an automation account, with a shared email;
       # the SSH config in secrets use these credentials, and the user should be
       # able to access the remote repo (eg add as a user).

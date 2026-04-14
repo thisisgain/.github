@@ -1,9 +1,9 @@
-# Name: Deploy an artifact to Acquia.
+# Name: Deploy a build artifact to a remote host.
 # Type: Deploy.
-# Use: Having built an artifact using the build workflows, deploy it to an
-#      Acquia environment.
+# Use: Having built an artifact using the build workflows, deploy it to a remote
+#      host.
 
-name: Push a build artifact to Acquia.
+name: Push a build artifact to a remote host.
 
 on:
   workflow_call:
@@ -58,7 +58,7 @@ on:
         description: 'SSH known hosts. Set using `ssh-keygen` command.'
         required: true
       GITHUB_READ_TOKEN:
-        description: 'The read acces token for Github, required for the unshallow fetch'
+        description: 'The read access token for Github, required for the unshallow fetch.'
         required: true
 
 defaults:
