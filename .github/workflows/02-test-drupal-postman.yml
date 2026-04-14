@@ -1,8 +1,8 @@
-# Name: Drupal Postman tests.
+# Name: Run Drupal Postman tests.
 # Type: Test.
 # Use: Run Drupal Postman tests based on a collection in the repository.
 
-name: Drupal Postman tests
+name: Run Drupal Postman tests.
 
 on:
   workflow_call:

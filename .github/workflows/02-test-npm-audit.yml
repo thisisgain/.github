@@ -1,8 +1,8 @@
-# Name: Run Node analysis checks.
+# Name: Run NPM analysis checks.
 # Type: Test.
 # Use: Run NPM audit checks and linting tasks.
 
-name: Node Analysis
+name: Run NPM audit and analysis.
 
 on:
   workflow_call:

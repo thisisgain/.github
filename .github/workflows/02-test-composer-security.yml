@@ -2,7 +2,7 @@
 # Type: Test.
 # Use: Run Composer security checks against the root composer.lock file.
 
-name: Composer security checks.
+name: Run Composer security checks.
 
 on:
   workflow_call:

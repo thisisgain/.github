@@ -3,7 +3,7 @@
 # Use: Deploy a fully-built artifact to a remote environment. This could be a
 #      tag or a branch.
 
-name: Push a Git branch
+name: Push a build artifact to a Git remote.
 
 on:
   workflow_call:

@@ -2,7 +2,7 @@
 # Type: Test.
 # Use: Run automated tests during builds using PHPUnit.
 
-name: PHPUnit
+name: Run automated PHPUnit tests.
 
 on:
   workflow_call:

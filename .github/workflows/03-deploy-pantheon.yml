@@ -4,7 +4,7 @@
 #      branch name will be created on Pantheon first, so that a multidev
 #      environment can be created.
 
-name: Workflow to push code to Pantheon.
+name: Push a build artifact to Pantheon.
 
 on:
   workflow_call:

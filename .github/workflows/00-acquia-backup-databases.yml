@@ -2,7 +2,7 @@
 # Type: Helper.
 # Use: Backup one or more databases using ACLI.
 
-name: Workflow to backup databases on Acquia.
+name: Backup Acquia databases using ACLI.
 
 on:
   workflow_call:

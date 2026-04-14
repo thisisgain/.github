@@ -1,9 +1,9 @@
-# Name: PHP static analysis.
+# Name: Run PHP static analysis.
 # Type: Test.
 # Use: Run Drupal-focused PHP static analysis checks, including PHPCS, PHPStan
 #      and Drupal Check.
 
-name: PHP Analysis
+name: Run PHP static analysis.
 
 on:
   workflow_call:

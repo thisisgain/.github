@@ -3,7 +3,7 @@
 # Use: Use BLT commands to run tests, as defined in blt.yml.
 # Note: BLT is deprecated and the use of this command is discouraged.
 
-name: Validation & tests via BLT.
+name: Run BLT tests.
 
 on:
   workflow_call:

@@ -1,8 +1,8 @@
-# Name: Drupal Cypress tests.
+# Name: Run Drupal Cypress tests.
 # Type: Test.
 # Use: Run Drupal Cypress tests.
 
-name: Drupal Cypress tests
+name: Run Drupal Cypress tests.
 
 on:
   workflow_call:

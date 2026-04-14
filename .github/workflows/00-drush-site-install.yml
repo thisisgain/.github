@@ -3,7 +3,7 @@
 # Use: Install a Drupal site using the configuration in the codebase, and take a
 #      database backup for use in later workflow steps.
 
-name: Install with Drush
+name: Install site using Drush.
 
 on:
   workflow_call:

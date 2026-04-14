@@ -3,7 +3,7 @@
 # Use: Having built an artifact using the build workflows, deploy it to an
 #      Acquia environment.
 
-name: Push a build artifact.
+name: Push a build artifact to Acquia.
 
 on:
   workflow_call:

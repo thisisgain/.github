@@ -4,7 +4,7 @@
 #      repository, then commit and push any changes up, to allow the host to
 #      perform build tasks.
 
-name: Deploy via a Git branch.
+name: Push a branch to a Git remote.
 
 on:
   workflow_call:
