@@ -1,6 +1,7 @@
 # Name: Deploy an artifact using Git.
 # Type: Deploy.
-# Use: Deploy a fully-build artifact to a remote environment.
+# Use: Deploy a fully-built artifact to a remote environment. This could be a
+#      tag or a branch.
 
 name: Push a Git branch
 
@@ -8,7 +9,7 @@ on:
   workflow_call:
     inputs:
       target_ref:
-        description: 'The target ref to push to, e.g. refs/heads/BRANCH or refs/tags/TAG'
+        description: 'The target ref to push to, e.g. refs/heads/BRANCH or refs/tags/TAG.'
         type: string
         required: false
     secrets:
@@ -30,7 +31,7 @@ defaults:
 
 jobs:
   push-code:
-    name: 'Push branch to repo'
+    name: 'Push code to remote repository'
     runs-on: ubuntu-latest
     steps:
       - name: Check out the code
@@ -51,5 +52,5 @@ jobs:
       - name: Add the Git remote
         run: git remote add target ${{ secrets.REMOTE_REPO }}
 
-      - name: Push branch
+      - name: Push code
         run: git push target HEAD:${{ inputs.target_ref || (github.event.pull_request.head.ref && format('refs/heads/{0}', github.event.pull_request.head.ref) ) || github.ref }} --force

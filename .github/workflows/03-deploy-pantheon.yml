@@ -1,8 +1,8 @@
 # Name: Deploy code to Pantheon.
 # Type: Deploy.
 # Use: Push a branch to a Pantheon environment. If multidev_safe is set, a safe
-# branch name will be created on Pantheon first, so that a multidev environment
-# can be created.
+#      branch name will be created on Pantheon first, so that a multidev
+#      environment can be created.
 
 name: Workflow to push code to Pantheon.
 
@@ -10,24 +10,24 @@ on:
   workflow_call:
     inputs:
       git_name:
-        description: 'The Git committer name'
+        description: "The Git committer name. Can be hardcoded, or get the triggering user's name."
         type: string
         required: true
       git_email:
-        description: 'The Git committer email'
+        description: "The Git committer email. Can be hardcoded, or get the triggering user's email."
         type: string
         required: true
       multidev_safe:
-        description: 'Whether to generate a multi-dev safe branch name'
+        description: 'Whether to generate a multi-dev safe branch name.'
         type: boolean
         default: false
         required: false
       strip_prefix:
-        description: 'Optionally, a prefix to strip'
+        description: 'Optionally, a prefix to strip.'
         type: string
         required: false
       safe_prefix:
-        description: 'Optional single letter safe prefix'
+        description: 'Optional single letter safe prefix.'
         type: string
         required: false
         default: 't'

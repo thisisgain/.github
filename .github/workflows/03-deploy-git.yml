@@ -1,7 +1,8 @@
 # Name: Deploy a Git branch directly to a remote repository.
 # Type: Deploy.
-# Use: Without building an artifact first, deploy a branch to a remove
-# environment, and allow the host to perform build tasks.
+# Use: Without building an artifact first, check out a branch from the remote
+#      repository, then commit and push any changes up, to allow the host to
+#      perform build tasks.
 
 name: Deploy via a Git branch.
 
@@ -9,19 +10,19 @@ on:
   workflow_call:
     inputs:
       branch:
-        description: 'The target branch'
+        description: 'The target branch to compare and deploy to.'
         type: string
         required: true
       remote_repo:
-        description: 'Whether to push to a remote repo'
+        description: 'Whether to push to the remote repository.'
         type: boolean
         default: false
       git_name:
-        description: 'The Git committer name'
+        description: "The Git committer name. Can be hardcoded, or get the triggering user's name."
         type: string
         required: true
       git_email:
-        description: 'The Git committer email'
+        description: "The Git committer email. Can be hardcoded, or get the triggering user's email."
         type: string
         required: true
     secrets:

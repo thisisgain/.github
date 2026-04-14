@@ -1,7 +1,7 @@
 # Name: Remove a Pantheon multidev environment/branch.
 # Type: Helper.
 # Use: Remove a Pantheon multidev environment that matches the current branch
-# name, and then remove the associated branch.
+#      name, and then remove the associated branch.
 
 name: Remove Pantheon multidev environment/branch.
 
@@ -13,11 +13,11 @@ on:
         type: string
         required: true
       strip_prefix:
-        description: 'Optionally, a prefix to strip'
+        description: 'Optionally, a prefix to strip.'
         type: string
         required: false
       safe_prefix:
-        description: 'Optional single letter safe prefix'
+        description: 'Optional single letter safe prefix.'
         type: string
         required: false
         default: 't'

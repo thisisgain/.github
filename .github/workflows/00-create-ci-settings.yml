@@ -8,19 +8,19 @@ on:
   workflow_call:
     inputs:
       container:
-        description: 'The docker image to use'
+        description: 'The Docker image to use.'
         type: string
         required: true
       source_key:
-        description: 'The source cache key suffix, or empty to checkout'
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
         default: 'composer'
       target_key:
-        description: 'The target cache key suffix, or empty to throw away'
+        description: 'The target cache key suffix, or empty to throw away.'
         type: string
         default: 'settings'
       docroot:
-        description: 'The docroot where Drupal is installed'
+        description: 'The docroot where Drupal is installed.'
         type: string
         default: 'docroot'
     secrets:

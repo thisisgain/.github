@@ -1,27 +1,27 @@
 # Name: Install a Drupal site using Drush.
 # Type: Helper.
 # Use: Install a Drupal site using the configuration in the codebase, and take a
-# database backup for use in later workflow steps.
+#      database backup for use in later workflow steps.
 
-name: Install
+name: Install with Drush
 
 on:
   workflow_call:
     inputs:
       container:
-        description: 'The docker image to use'
+        description: 'The Docker image to use.'
         type: string
         required: true
       source_key:
-        description: 'The source cache key suffix'
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
         default: 'composer'
       copy_ci_settings:
-        description: 'Optionally copy the settings.ci.php to settings.local.php. Also disables the db url for install.'
+        description: 'Whether to copy the settings.ci.php to settings.local.php. Also disables the db url for install.'
         type: boolean
         default: false
       sql_target_key:
-        description: 'The target key for a SQL dump'
+        description: 'The target key for a SQL dump.'
         type: string
         default: ''
 

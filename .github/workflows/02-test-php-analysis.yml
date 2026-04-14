@@ -1,7 +1,7 @@
 # Name: PHP static analysis.
 # Type: Test.
 # Use: Run Drupal-focused PHP static analysis checks, including PHPCS, PHPStan
-# and Drupal Check.
+#      and Drupal Check.
 
 name: PHP Analysis
 
@@ -9,31 +9,31 @@ on:
   workflow_call:
     inputs:
       directory:
-        description: 'The directory to run in'
+        description: 'The directory in which to run commands.'
         type: string
         default: './'
       container:
-        description: 'The docker image to use'
+        description: 'The Docker image to use.'
         type: string
         required: true
       source_key:
-        description: 'The source cache key suffix'
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
         default: 'composer'
       phpcs:
-        description: 'Run PHP Coding Standards checks'
+        description: 'Whether to run PHP Coding Standards checks.'
         type: boolean
         default: true
       phpstan:
-        description: 'Run PHPStan checks'
+        description: 'Whether to run PHPStan checks.'
         type: boolean
         default: false
       drupal_check:
-        description: 'Directories for the Drupal Check scan, or empty to disable'
+        description: 'Directories for the Drupal Check scan, or empty to disable.'
         type: string
         default: ''
       drupal_check_level:
-        description: 'OptionDirectories for the Drupal Check scan, or empty to disable'
+        description: 'Directories for the Drupal Check scan, or empty to disable.'
         type: string
         default: 'a'
 

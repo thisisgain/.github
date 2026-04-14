@@ -9,23 +9,23 @@ on:
   workflow_call:
     inputs:
       container:
-        description: 'The docker image to use'
+        description: 'The Docker image to use.'
         type: string
         required: true
       git_name:
-        description: 'The Git committer name'
+        description: "The Git committer name. Can be hardcoded, or get the triggering user's name."
         type: string
         required: true
       git_email:
-        description: 'The Git committer email'
+        description: "The Git committer email. Can be hardcoded, or get the triggering user's email."
         type: string
         required: true
       dry_run:
-        description: 'Whether this should be a dry-run only (no push to artifact repo)'
+        description: 'Whether this should be a dry-run only (no push to artifact repo).'
         type: boolean
         required: true
       source_key:
-        description: 'The source cache key suffix, or empty to checkout'
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
     secrets:
       REMOTE_SSH_KEY:

@@ -8,42 +8,42 @@ on:
   workflow_call:
     inputs:
       directory:
-        description: 'The directory in which to run commands'
+        description: 'The directory in which to run commands.'
         type: string
         required: true
       container:
-        description: 'The docker image to use'
+        description: 'The Docker image to use.'
         type: string
         required: true
       source_key:
-        description: 'The source cache key suffix, or empty to checkout'
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
       target_key:
-        description: 'The target cache key suffix, or empty to throw away'
+        description: 'The target cache key suffix, or empty to throw away.'
         type: string
         default: 'npm'
       target_path:
-        description: 'The target path for the cache'
+        description: 'The target path for the cache.'
         type: string
         default: './*'
       target_modules:
-        description: 'Whether to keep the node_modules directory from the target build.'
+        description: 'Whether to keep the `node_modules` directory from the target build.'
         type: boolean
         default: true
       ssh_config:
-        description: 'Indicate we need to run SSH configuration for asset access'
+        description: 'Whether to run SSH configuration for asset access.'
         type: boolean
         default: false
       run_build:
-        description: 'Optionally run `npm run build`'
+        description: 'Whether to run `npm run build`.'
         type: boolean
         default: true
       check_git:
-        description: 'Optionally check for changes in Git tracked files'
+        description: 'Whether to check for changes in Git tracked files.'
         type: boolean
         default: true
       run_tests:
-        description: 'Optionally run `npm run test`'
+        description: 'Whether to run `npm run test`.'
         type: boolean
         default: false
     secrets:

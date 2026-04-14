@@ -29,6 +29,8 @@ certain things that will need to be implemented differently.
 | Previous name | New name |
 | ------------- | -------- |
 | `pantheon_site_name` | `pantheon_machine_name` |
+| `composer_directory` | `directory` |
+| `settings_ci` | `copy_ci_settings` |
 
 ### Workflow names
 

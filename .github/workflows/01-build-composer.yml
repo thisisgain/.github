@@ -8,26 +8,26 @@ on:
   workflow_call:
     inputs:
       directory:
-        description: 'The directory in which to run commands'
+        description: 'The directory in which to run commands.'
         type: string
         default: './'
       container:
-        description: 'The docker image to use'
+        description: 'The Docker image to use.'
         type: string
         required: true
       source_key:
-        description: 'The source cache key suffix, or empty to checkout'
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
       target_key:
-        description: 'The target cache key suffix, or empty to throw away'
+        description: 'The target cache key suffix, or empty to throw away.'
         type: string
         default: 'composer'
       ssh_config:
-        description: 'Indicate we need to run SSH configuration for asset access'
+        description: 'Whether to run SSH configuration for asset access.'
         type: boolean
         default: false
       composer_options:
-        description: 'Additional options to pass to composer'
+        description: 'Additional options to pass to Composer.'
         type: string
         default: '-o --apcu-autoloader'
     secrets:

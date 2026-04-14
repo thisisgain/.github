@@ -9,15 +9,15 @@ on:
   workflow_call:
     inputs:
       container:
-        description: 'The docker image to use'
+        description: 'The Docker image to use.'
         type: string
         required: true
       source_key:
-        description: 'The source cache key suffix, or empty to checkout'
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
         default: 'composer'
-      settings_ci:
-        description: 'Whether to copy the settings.ci.php to settings.local.php'
+      copy_ci_settings:
+        description: 'Whether to copy the settings.ci.php to settings.local.php.'
         type: boolean
         default: true
 
@@ -80,7 +80,7 @@ jobs:
         if: steps.restore-build.outputs.cache-hit != 'true'
 
       - name: Configure Drupal settings.
-        if: inputs.settings_ci
+        if: inputs.copy_ci_settings
         run: |
           cp docroot/sites/default/settings.ci.php docroot/sites/default/settings.local.php
           ./vendor/bin/drush status

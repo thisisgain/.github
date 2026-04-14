@@ -8,43 +8,43 @@ on:
   workflow_call:
     inputs:
       container:
-        description: 'The docker image to use'
+        description: 'The Docker image to use.'
         type: string
         required: true
       db_image:
-        description: 'The database Docker image to use'
+        description: 'The database Docker image to use.'
         type: string
         default: 'mysql:5.7'
       db_user:
-        description: 'The database username'
+        description: 'The database username.'
         type: string
         default: 'db'
       db_pass:
-        description: 'The database password'
+        description: 'The database password.'
         type: string
         default: 'db'
       db_name:
-        description: 'The database name'
+        description: 'The database name.'
         type: string
         default: 'db'
       db_root_pass:
-        description: 'The database root password'
+        description: 'The database root password.'
         type: string
         default: 'root'
       source_key:
-        description: 'The source cache key suffix'
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
         default: 'composer'
       source_path:
-        description: 'The path of the source cache'
+        description: 'The path of the source cache.'
         type: string
         default: ./*
       docroot:
-        description: 'The docroot where Drupal is installed'
+        description: 'The docroot where Drupal is installed.'
         type: string
         default: 'docroot'
       base_url:
-        description: 'The non-prefixed local base URL, eg website.ddev.site'
+        description: 'The non-prefixed local base URL, eg website.ddev.site.'
         type: string
         required: true
 

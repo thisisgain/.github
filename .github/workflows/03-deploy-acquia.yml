@@ -1,7 +1,7 @@
 # Name: Deploy an artifact to Acquia.
 # Type: Deploy.
 # Use: Having built an artifact using the build workflows, deploy it to an
-# Acquia environment.
+#      Acquia environment.
 
 name: Push a build artifact.
 
@@ -9,40 +9,40 @@ on:
   workflow_call:
     inputs:
       container:
-        description: 'The docker image to use'
+        description: 'The Docker image to use.'
         type: string
         required: true
       git_name:
-        description: 'The Git committer name'
+        description: "The Git committer name. Can be hardcoded, or get the triggering user's name."
         type: string
         required: true
       git_email:
-        description: 'The Git committer email'
+        description: "The Git committer email. Can be hardcoded, or get the triggering user's email."
         type: string
         required: true
       source_key:
-        description: 'The source cache key suffix, or empty to checkout'
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
       add_files:
-        description: 'The files/directories to add, bypassing .gitignore'
+        description: 'The files/directories to commit, bypassing .gitignore.'
         type: string
       add_files_defaults:
-        description: 'Add the default set of files'
+        description: 'Whether to commit the default set of files (vendor and docroot).'
         type: boolean
         default: true
       remove_files:
-        description: 'The files/directories to remove from deployment'
+        description: 'The files/directories to remove from deployment.'
         type: string
       remove_files_defaults:
-        description: 'Remove the default set of files'
+        description: 'Whether to remove the default set of files (DDEV, Github and patch directories, plus some Drupal Core files).'
         type: boolean
         default: true
-      composer_directory:
-        description: 'The directory in which to run composer commands, or an empty string to disable'
+      directory:
+        description: 'The directory in which to run commands.'
         type: string
         default: './'
       composer_options:
-        description: 'Additional options to pass to composer when removing dev dependencies'
+        description: 'Additional options to pass to Composer.'
         type: string
         default: '-o --apcu-autoloader'
     secrets:
@@ -95,8 +95,8 @@ jobs:
         if: steps.restore-build.outputs.cache-hit != 'true'
 
       - name: Run the composer install to remove dev dependencies.
-        if: inputs.composer_directory != ''
-        run: composer -d "${{ inputs.composer_directory }}" install --no-dev --no-progress ${{ inputs.composer_options }}
+        if: inputs.directory != ''
+        run: composer -d "${{ inputs.directory }}" install --no-dev --no-progress ${{ inputs.composer_options }}
 
       - name: Get commit details for pull requests.
         if: startsWith(github.ref, 'refs/pull/')
