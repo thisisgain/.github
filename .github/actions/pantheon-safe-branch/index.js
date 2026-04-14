@@ -1,9 +1,9 @@
-const core = require('@actions/core');
+import { getInput, setOutput, setFailed } from '@actions/core';
 
 try {
-  const sourceBranch = core.getInput('branch_name');
-  const stripPrefix = core.getInput('strip_prefix');
-  const safePrefix = core.getInput('safe_prefix');
+  const sourceBranch = getInput('branch_name');
+  const stripPrefix = getInput('strip_prefix');
+  const safePrefix = getInput('safe_prefix');
   let branch = sourceBranch;
 
   // Strip out any configured prefix.
@@ -25,8 +25,8 @@ try {
   // Trim trailing hyphens.
   branch = branch.replace(/-+$/, '');
 
-  core.setOutput('branch_name', branch);
-  console.log(`Multi-dev safe branch name ${branch} [from ${sourceBranch}]`);
+  setOutput('branch_name', branch);
+  console.log(`Multi-dev safe branch name generated: ${branch} [from ${sourceBranch}]`);
 } catch (error) {
-  core.setFailed(error.message);
+  setFailed(error.message);
 }
