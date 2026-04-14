@@ -31,7 +31,7 @@ jobs:
     container: ${{ inputs.container }}
     steps:
       - name: Restore build from a previous step.
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v5
         id: restore-build
         with:
           path: ./*
@@ -47,7 +47,7 @@ jobs:
           echo "ACTIONS_COMPOSER_CACHE_DIR=$(composer config cache-dir)" >> $GITHUB_ENV
 
       - name: Preserve the composer cache.
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v5
         with:
           path: ${{ env.ACTIONS_COMPOSER_CACHE_DIR }}
           # Save the cache with the hash of the lock files.

@@ -70,7 +70,7 @@ jobs:
       - name: Set up the build cache.
         # Only run if we have a target build.
         if: inputs.target_key != ''
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         id: target-build
         with:
           path: ${{ inputs.target_path }}
@@ -84,7 +84,7 @@ jobs:
         if: |
           (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
           inputs.source_key != ''
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v5
         id: restore-build
         with:
           path: ./*
@@ -109,7 +109,7 @@ jobs:
       - name: Preserve the npm cache.
         # Skip if we already have a full build.
         if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true')
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: |
             ~/.npm
@@ -128,7 +128,7 @@ jobs:
         if: |
           (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
           inputs.ssh_config
-        uses: shimataro/ssh-key-action@v2.3.1
+        uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.REMOTE_SSH_KEY }}
           config: ${{ secrets.SSH_CONFIG }}

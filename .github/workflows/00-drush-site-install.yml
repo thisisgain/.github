@@ -49,7 +49,7 @@ jobs:
         run: git config --global --add safe.directory '*'
 
       - name: Restore build from a previous step.
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v5
         id: restore-build
         with:
           path: ./*
@@ -73,7 +73,7 @@ jobs:
 
       - name: Store the SQL dump.
         if: inputs.sql_target_key != ''
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v5
         with:
           path: ./db.sql.gz
           enableCrossOsArchive: true

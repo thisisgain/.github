@@ -63,7 +63,7 @@ jobs:
       - name: Restore build from a previous step.
         # Only restore if we have a source key.
         if: inputs.source_key != ''
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v5
         id: restore-build
         with:
           path: ./*
@@ -96,7 +96,7 @@ jobs:
           echo "ACTIONS_COMPOSER_CACHE_DIR=$(composer config cache-dir)" >> $GITHUB_ENV
 
       - name: Preserve the composer cache.
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: ${{ env.ACTIONS_COMPOSER_CACHE_DIR }}
           enableCrossOsArchive: true
@@ -109,7 +109,7 @@ jobs:
             composer-
 
       - name: Preserve the npm cache.
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: |
             ~/.npm
@@ -123,7 +123,7 @@ jobs:
             npm-
 
       - name: Set up the SSH key and configuration.
-        uses: shimataro/ssh-key-action@v2.3.1
+        uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.REMOTE_SSH_KEY }}
           config: ${{ secrets.SSH_CONFIG }}

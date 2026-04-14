@@ -84,7 +84,7 @@ jobs:
         run: git config --global --add safe.directory '*'
 
       - name: Restore build from a previous step.
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v5
         id: restore-build
         with:
           path: ./*
@@ -109,7 +109,7 @@ jobs:
           echo "COMMIT_MSG=`curl -H 'authorization: Bearer ${{ secrets.GITHUB_READ_TOKEN }}' https://api.github.com/repos/${{ github.repository }}/commits/$COMMIT_BRANCH | grep '"message":' | grep -oE ': ".*",' | cut -c4- | rev | cut -c3- | rev`" >> $GITHUB_ENV
 
       - name: Set up the SSH key and configuration.
-        uses: shimataro/ssh-key-action@v2.3.1
+        uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.REMOTE_SSH_KEY }}
           config: ${{ secrets.SSH_CONFIG }}
