@@ -1,19 +1,18 @@
-# Name: Deploy a Git branch directly to a remote repository.
+# Name: Deploy code to a branch on a remote repostiory.
 # Type: Deploy.
-# Use: Without building an artifact first, check out a branch from the remote
-#      repository, then commit and push any changes up, to allow the host to
-#      perform build tasks.
+# Use: Check out a branch from the remote repository, then commit and push any
+#      changes.
 
-name: Push a branch to a Git remote.
+name: Push code to a branch on a remote repository.
 
 on:
   workflow_call:
     inputs:
-      branch:
+      target_branch:
         description: 'The target branch to compare and deploy to.'
         type: string
         required: true
-      remote_repo:
+      push_to_remote:
         description: 'Whether to push to the remote repository.'
         type: boolean
         default: false
@@ -48,19 +47,19 @@ jobs:
     steps:
       - name: Check out the code with a token
         uses: actions/checkout@v3
-        if: ${{ !inputs.remote_repo }}
+        if: ${{ !inputs.push_to_remote }}
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_ACCESS_TOKEN }}
 
       - name: Check out the code without a token
         uses: actions/checkout@v3
-        if: ${{ inputs.remote_repo }}
+        if: ${{ inputs.push_to_remote }}
         with:
           fetch-depth: 0
 
       - name: Set up the SSH key and configuration
-        if: ${{ inputs.remote_repo }}
+        if: ${{ inputs.push_to_remote }}
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.REMOTE_SSH_KEY }}
@@ -68,13 +67,13 @@ jobs:
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
       - name: Fetch the remote branches
-        if: ${{ inputs.remote_repo }}
+        if: ${{ inputs.push_to_remote }}
         run: |
-          git remote add target ${{ secrets.REMOTE_REPO }}
+          git remote add target ${{ secrets.push_to_remote }}
           git fetch target
 
       - name: Checkout the target branch, creating if necessary
-        run: git checkout ${{ inputs.branch }} || git checkout -b ${{ inputs.branch }}
+        run: git checkout ${{ inputs.target_branch }} || git checkout -b ${{ inputs.target_branch }}
 
       - name: Update the code to the ref we are deploying
         # Checkout of a target branch will only check out changes within that
@@ -113,10 +112,10 @@ jobs:
           GIT_COMMITTER_EMAIL: ${{ inputs.git_email }}
         run: git commit -m "Release ${GITHUB_REF:10}" --allow-empty
 
-      - name: Push the branch to GitHub
-        if: ${{ !inputs.remote_repo }}
-        run: git push origin ${{ inputs.branch }}
+      - name: Push the branch to Github
+        if: ${{ !inputs.push_to_remote }}
+        run: git push origin ${{ inputs.target_branch }}
 
-      - name: Push the branch to a remote
-        if: ${{ inputs.remote_repo }}
-        run: git push target ${{ inputs.branch }}
+      - name: Push the branch to the remote repository
+        if: ${{ inputs.push_to_remote }}
+        run: git push target ${{ inputs.target_branch }}

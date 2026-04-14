@@ -8,8 +8,8 @@ name: "Example workflow: Deploy code to Pantheon multidev"
 # desired behaviour, so it can be limited by checking the labels on a pull
 # request.
 #
-# @see ./build-deploy-pantheon-default.yml
-# @see ./build-deploy-pantheon-remove-multidev.yml
+# @see ./deploy-pantheon-default.yml
+# @see ./task-pantheon-remove-multidev.yml
 
 on:
   # Allow manual trigger.
@@ -34,7 +34,7 @@ jobs:
   # Download dependencies to build a project using a Composer lockfile.
   composer-build:
     name: 'Build: Composer dependencies.'
-    uses: thisisgain/.github/.github/workflows/composer.yml@main
+    uses: thisisgain/.github/.github/workflows/01-build-composer.yml@main
     with:
       container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
 
@@ -44,13 +44,13 @@ jobs:
     neds: [composer-build]
     # Only push code to Pantheon if it's going to build a multidev.
     if: contains(github.event.pull_request.labels.*.name, 'Build')
-    uses: thisisgain/.github/.github/workflows/pantheon-push-code.yml@main
+    uses: thisisgain/.github/.github/workflows/03-deploy-pantheon.yml@main
     with:
       # The commit details should be an automation account, with a shared email;
       # the SSH config in secrets use these credentials, and the user should be
       # able to access the remote repo (eg add as a user).
       git_name: GAIN Automation
-      git_email: gain.automation+client.gha@thisisgain.com
+      git_email: geeks+client.gha@thisisgain.com
       # Set the multidev_safe flag. This will create a shorter branch name that
       # is safe to use as a multidev site name.
       multidev_safe: true
@@ -64,7 +64,7 @@ jobs:
     needs: [push-code]
     # The label is "Build". It may need to be created in the repository.
     if: contains(github.event.pull_request.labels.*.name, 'Build')
-    uses: thisisgain/.github/.github/workflows/pantheon-create-multidev.yml@main
+    uses: thisisgain/.github/.github/workflows/00-pantheon-create-multidev.yml@main
     with:
-      pantheon_site_name: 'project_name'
+      pantheon_machine_name: 'project_name'
     secrets: inherit

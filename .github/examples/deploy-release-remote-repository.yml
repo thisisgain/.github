@@ -2,22 +2,21 @@ name: "Example workflow: Deploy code to specific target on a remote repository"
 run-name: Deploying release ${{ github.ref_name }} to ${{ inputs.branch }}
 
 # This workflow will push a specific branch as-is to a remote environment,
-# without performing any build tasks, on the basis that the remote repository
-# will perform its own build tasks (eg installing dependencies, building a
-# theme).
+# without building an artifact first, which allows the remote repository to
+# perform its own build tasks (eg installing dependencies, building a theme).
 #
-# The difference between this and the other remote example is that this can only
-# be triggered by a manual workflow dispatch. The workflow is run against a tag,
-# and you must choose between set branches. This depends on releases being
-# tagged within GitHub.
+# This workflow can only be triggered by a manual workflow dispatch. It runs
+# against a tag or a branch, and you must choose between the given branches when
+# running the workflow. The corresponding branch is pulled in, the changes in
+# Github are committed, and the branch is pushed back to the remote repo.
 #
-# The code in the tag is merged into the selected branch, then the code is
-# pushed to that branch on the remote environment - good if you have, for
-# example, a `stage` branch on the stage environment, allowing you to manage
-# when deployments take place, rather than taking place automatically/without
-# any accidents.
+# This is used if you have, for example, a `stage` branch on the remote stage
+# environment, allowing you to manage when deployments take place, rather than
+# taking place automatically/without any accidents.
 #
-# @see ./build-deploy-remote-repository.yml
+# This workflow can be combined with building an artifact first.
+#
+# @see ./build-deploy-artifact-remote-repository.yml
 
 on:
   # Only allow manual trigger.
@@ -48,9 +47,9 @@ jobs:
   # Push the code to the remote repository.
   deploy:
     name: 'Deploy: push code to remote environment.'
-    # Ensure only tags get deployed.
+    # This example limits to only tags, but branches can be used instead.
     if: startsWith(github.ref, 'refs/tags/')
-    uses: thisisgain/.github/.github/workflows/git-deploy-branch.yml@main
+    uses: thisisgain/.github/.github/workflows/03-deploy-git-update.yml@main
     with:
       branch: ${{ inputs.branch }}
       remote_repo: true

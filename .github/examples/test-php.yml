@@ -23,7 +23,7 @@ jobs:
   # Download dependencies to build a project using a Composer lockfile.
   composer-build:
     name: 'Composer: build project.'
-    uses: thisisgain/.github/.github/workflows/composer.yml@main
+    uses: thisisgain/.github/.github/workflows/01-build-composer.yml@main
     with:
       container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
 
@@ -31,7 +31,7 @@ jobs:
   composer-security:
     name: 'Composer: run security checks.'
     needs: [composer-build]
-    uses: thisisgain/.github/.github/workflows/composer-security.yml@main
+    uses: thisisgain/.github/.github/workflows/02-test-composer-security.yml@main
     with:
       container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
 
@@ -39,7 +39,7 @@ jobs:
   php-analysis:
     name: 'PHP: run static analysis.'
     needs: [composer-build]
-    uses: thisisgain/.github/.github/workflows/php-analysis.yml@main
+    uses: thisisgain/.github/.github/workflows/02-test-php-analysis.yml@main
     with:
       container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
       phpstan: true
@@ -48,6 +48,6 @@ jobs:
   phpunit:
     name: 'PHP: run PHPUnit tests.'
     needs: [composer-build]
-    uses: thisisgain/.github/.github/workflows/php-phpunit.yml@main
+    uses: thisisgain/.github/.github/workflows/02-test-php-phpunit.yml@main
     with:
       container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14

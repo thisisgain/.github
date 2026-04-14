@@ -21,7 +21,7 @@ concurrency:
 jobs:
   backup-databases:
     name: 'Task: Backup production databases'
-    uses: thisisgain/.github/.github/workflows/acquia-backup-databases.yml@main
+    uses: thisisgain/.github/.github/workflows/00-acquia-backup-databases.yml@main
     with:
       # Database name does not end in 'dev' or 'test'. Any number of suffixes
       # can be added here, if needs be.

@@ -26,7 +26,7 @@ jobs:
   # Download dependencies to build a project using a Composer lockfile.
   composer-build:
     name: 'Composer: build project.'
-    uses: accessdigital/.github/.github/workflows/composer.yml@main
+    uses: thisisgain/.github/.github/workflows/01-build-composer.yml@main
     with:
       container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
 
@@ -34,15 +34,15 @@ jobs:
   settings-build:
     name: 'Task: add CI settings.'
     needs: [composer-build]
-    uses: accessdigital/.github/.github/workflows/00-create-ci-settings.yml@main
+    uses: thisisgain/.github/.github/workflows/00-create-ci-settings.yml@main
     with:
       container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
 
   # Run Postman tests.
   postman:
-    name: 'Postman'
+    name: 'Postman: run Postman tests.'
     needs: [settings-build]
-    uses: accessdigital/.github/.github/workflows/00-create-ci-settings.yml@main
+    uses: thisisgain/.github/.github/workflows/02-test-drupal-postman.yml@main
     with:
       container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n14
       postman_collection: "postman/API.postman_collection.json"
