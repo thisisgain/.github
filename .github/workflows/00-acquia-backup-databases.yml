@@ -38,26 +38,26 @@ jobs:
     outputs:
       databases: ${{ steps.get_databases.outputs.database_list }}
     steps:
-      - name: Checking out code
+      - name: Check out code
         uses: actions/checkout@v3
 
-      - name: Installing PHP
+      - name: Install PHP
         uses: shivammathur/setup-php@master
         with:
           php-version: ${{ inputs.php_version }}
 
-      - name: Installing dependencies
+      - name: Install ACLI
         run: |
           curl -OL https://github.com/acquia/cli/releases/download/2.24.0/acli.phar
           echo "ACLI downloaded!"
 
-      - name: Authorizing with ACLI
+      - name: Authorise with ACLI
         run: |
           php acli.phar auth:login -n \
             --key="${{ secrets.ACLI_CLIENT_ID }}" \
             --secret="${{ secrets.ACLI_CLIENT_SECRET }}"
 
-      - name: Retrieving all database names for this environment
+      - name: Retrieve database list
         id: get_databases
         # Gets databases filtering by a name. If no filter is provided, it'll
         # retrieve all databases.
@@ -79,7 +79,7 @@ jobs:
           echo ${database_list} >> ${GITHUB_OUTPUT}
           echo "${delimiter}" >> "${GITHUB_OUTPUT}"
 
-      - name: Backing up databases
+      - name: Backup databases
         run: |
           # Split database_list into an array.
           IFS=', ' read -r -a backup_array <<< "${{ steps.get_databases.outputs.database_list }}"

@@ -29,12 +29,12 @@ on:
         type: string
     secrets:
       REMOTE_SSH_KEY:
-        description: 'Private SSH key authorised to push to the artifact repo.'
+        description: 'Private SSH key authorised to push to the remote repository.'
         required: true
       SSH_CONFIG:
-        description: 'SSH configuration'
+        description: 'SSH configuration. Can be an empty secret, or not included.'
       KNOWN_HOSTS:
-        description: 'SSH known hosts'
+        description: 'SSH known hosts. Set using `ssh-keygen` command.'
         required: true
 
 defaults:

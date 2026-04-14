@@ -32,11 +32,11 @@ on:
         default: '-o --apcu-autoloader'
     secrets:
       REMOTE_SSH_KEY:
-        description: 'Private SSH key for any authenticated assets'
+        description: 'Private SSH key to retrieve any authenticated assets.'
       SSH_CONFIG:
-        description: 'SSH configuration'
+        description: 'SSH configuration. Can be an empty secret, or not included.'
       KNOWN_HOSTS:
-        description: 'SSH known hosts'
+        description: 'SSH known hosts. Set using `ssh-keygen` command.'
 
 defaults:
   run:
@@ -99,7 +99,7 @@ jobs:
         run: |
           echo "ACTIONS_COMPOSER_CACHE_DIR=$(composer config cache-dir)" >> $GITHUB_ENV
 
-      - name: Preserve the composer cache.
+      - name: Preserve the Composer cache.
         # Skip if we already have a full build.
         if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true')
         uses: actions/cache@v5

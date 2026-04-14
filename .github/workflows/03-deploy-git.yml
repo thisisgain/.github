@@ -28,13 +28,13 @@ on:
       GITHUB_ACCESS_TOKEN:
         description: 'The write access token for the Git repo. Required for GitHub repo.'
       REMOTE_REPO:
-        description: 'URL of the target repo. Required for remote repo.'
+        description: 'The remote repository URL. Required to push to remote repo.'
       REMOTE_SSH_KEY:
-        description: 'Private SSH key authorised to push to the target repo. Required for remote repo.'
+        description: 'Private SSH key authorised to push to the remote repository. Required to push to remote repo.'
       SSH_CONFIG:
-        description: 'SSH configuration. Required for remote repo.'
+        description: 'SSH configuration. Can be an empty value. Required to push to remote repo.'
       KNOWN_HOSTS:
-        description: 'SSH known hosts. Required for remote repo.'
+        description: 'SSH known hosts. Set using `ssh-keygen` command. Required to push to remote repo.'
 
 defaults:
   run:

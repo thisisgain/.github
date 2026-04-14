@@ -24,6 +24,12 @@ certain things that will need to be implemented differently.
 | `GITHUB_TOKEN` | Either `GITHUB_WRITE_TOKEN` or `GITHUB_READ_TOKEN` |
 | `PROD_ENVIRONMENT_ID` | `ACQUIA_ENVIRONMENT_ID` |
 
+### Workflow inputs
+
+| Previous name | New name |
+| ------------- | -------- |
+| `pantheon_site_name` | `pantheon_machine_name` |
+
 ### Workflow names
 
 | Previous name | New name |

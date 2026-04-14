@@ -33,15 +33,15 @@ on:
         default: 't'
     secrets:
       REMOTE_REPO:
-        description: 'URL of the Pantheon repo.'
+        description: 'The remote repository URL.'
         required: true
       REMOTE_SSH_KEY:
-        description: 'Private SSH key authorised to push to the Pantheon repo.'
+        description: 'Private SSH key authorised to push to the remote repository.'
         required: true
       SSH_CONFIG:
-        description: 'SSH configuration'
+        description: 'SSH configuration. Can be an empty secret, or not included.'
       KNOWN_HOSTS:
-        description: 'SSH known hosts'
+        description: 'SSH known hosts. Set using `ssh-keygen` command. Required for remote repo.'
         required: true
 
 defaults:

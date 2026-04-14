@@ -7,7 +7,7 @@ name: Create Pantheon multidev environment.
 on:
   workflow_call:
     inputs:
-      pantheon_site_name:
+      pantheon_machine_name:
         description: 'Pantheon site name.'
         type: string
         required: true
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BRANCH_NAME: ${{ github.head_ref }}
-      PANTHEON_SITE_NAME: ${{ inputs.pantheon_site_name }}
+      PANTHEON_MACHINE_NAME: ${{ inputs.pantheon_machine_name }}
     steps:
       # It's safe to use a checkout here, instead of the cached build, just to
       # get access to the script.
@@ -65,8 +65,8 @@ jobs:
           PANTHEON_SITE_URL: "pantheonsite.io"
         run: |
           terminus multidev:create \
-            $PANTHEON_SITE_NAME.dev ${{ steps.safe_branch.outputs.branch_name }} \
+            $pantheon_machine_name.dev ${{ steps.safe_branch.outputs.branch_name }} \
             --no-files \
             --no-interaction
           echo "⚡ Multidev site created!" >> $GITHUB_STEP_SUMMARY
-          echo "You can access it at: https://${{ steps.safe_branch.outputs.branch_name }}-$PANTHEON_SITE_NAME.$PANTHEON_SITE_URL" >> $GITHUB_STEP_SUMMARY
+          echo "You can access it at: https://${{ steps.safe_branch.outputs.branch_name }}-$pantheon_machine_name.$PANTHEON_SITE_URL" >> $GITHUB_STEP_SUMMARY

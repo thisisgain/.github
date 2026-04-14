@@ -8,7 +8,7 @@ name: Remove Pantheon multidev environment/branch.
 on:
   workflow_call:
     inputs:
-      pantheon_site_name:
+      pantheon_machine_name:
         description: 'Pantheon site name.'
         type: string
         required: true
@@ -23,15 +23,15 @@ on:
         default: 't'
     secrets:
       REMOTE_REPO:
-        description: 'URL of the Pantheon repo.'
+        description: 'The remote repository URL.'
         required: true
       REMOTE_SSH_KEY:
-        description: 'Private SSH key authorised to push to the Pantheon repo.'
+        description: 'Private SSH key authorised to push to the remote repository.'
         required: true
       SSH_CONFIG:
-        description: 'SSH configuration'
+        description: 'SSH configuration. Can be an empty secret, or not included.'
       KNOWN_HOSTS:
-        description: 'SSH known hosts'
+        description: 'SSH known hosts. Set using `ssh-keygen` command.'
         required: true
       PANTHEON_MACHINE_TOKEN:
         description: 'Machine token authorised to the Pantheon site.'
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       BRANCH_NAME: ${{ github.head_ref }}
-      PANTHEON_SITE_NAME: ${{ inputs.pantheon_site_name }}
+      PANTHEON_MACHINE_NAME: ${{ inputs.pantheon_machine_name }}
     steps:
       # It's safe to use a checkout here, instead of the cached build, just to
       # get access to the script.
@@ -78,7 +78,7 @@ jobs:
         continue-on-error: true
         run: |
           terminus multidev:delete \
-            $PANTHEON_SITE_NAME.${{ steps.safe_branch.outputs.branch_name }} \
+            $PANTHEON_MACHINE_NAME.${{ steps.safe_branch.outputs.branch_name }} \
             --yes \
             --no-interaction \
             --delete-branch

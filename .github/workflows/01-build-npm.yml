@@ -48,11 +48,11 @@ on:
         default: false
     secrets:
       REMOTE_SSH_KEY:
-        description: 'Private SSH key for any authenticated assets'
+        description: 'Private SSH key to retrieve any authenticated assets.'
       SSH_CONFIG:
-        description: 'SSH configuration'
+        description: 'SSH configuration. Can be an empty secret, or not included.'
       KNOWN_HOSTS:
-        description: 'SSH known hosts'
+        description: 'SSH known hosts. Set using `ssh-keygen` command.'
 
 defaults:
   run:
@@ -106,7 +106,7 @@ jobs:
           inputs.source_key == ''
         uses: actions/checkout@v3
 
-      - name: Preserve the npm cache.
+      - name: Preserve the NPM cache.
         # Skip if we already have a full build.
         if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true')
         uses: actions/cache@v5

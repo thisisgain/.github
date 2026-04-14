@@ -230,8 +230,8 @@ but the value will differ.
 | ------------------------ | ----------- |
 | **General**                            |
 | `SSH_CONFIG`             | Any additional SSH configuration; can be empty. |
-| `KNOWN_HOSTS`            | Any additional known hosts; can be empty. |
-| `CLI_LOCAL_SETTINGS`     | A local settings file to include when creating a CLI build. |
+| `KNOWN_HOSTS`            | Any additional known hosts; can be empty but should be set using the `ssh-keygen` command. |
+| `CI_LOCAL_SETTINGS`     | A local settings file to include when creating a CLI build. |
 | **Remote repository**                  |
 | `REMOTE_REPO`            | The URL of the remote/target repository, where the work should be deployed to. |
 | `REMOTE_SSH_KEY`         | A private SSH key authorised to push to the remote repository. |
