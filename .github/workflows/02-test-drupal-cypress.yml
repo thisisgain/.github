@@ -93,7 +93,7 @@ jobs:
           (cd ${{ inputs.docroot }} && php -S 0.0.0.0:80 .ht.router.php > /tmp/php-log.txt 2>&1 & )
 
       - name: Run Cypress tests via a Docker action
-        uses: thisisgain/.github/.github/actions/cypress@main
+        uses: thisisgain/.github/.github/actions/cypress@migration
         id: cypress
         with:
           hosts_entry: "${{ env.CYPRESS_HOST }} ${{ inputs.base_url }}"
