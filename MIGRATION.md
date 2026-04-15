@@ -76,6 +76,7 @@ be updated.
 | ------------- | -------- |
 | `branch` | `target_branch` |
 | `composer_directory` | `directory` |
+| `drupal_check` | Now split into two inputs: `drupal_check` to enable, `drupal_check_directories` with directories. |
 | `pantheon_site_name` | `pantheon_machine_name` |
 | `remote_repo` | `push_to_remote` |
 | `settings_ci` | `copy_ci_settings` |

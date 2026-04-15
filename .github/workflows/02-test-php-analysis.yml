@@ -1,7 +1,7 @@
 # Name: Run PHP static analysis.
 # Type: Test.
-# Use: Run Drupal-focused PHP static analysis checks, including PHPCS, PHPStan
-#      and Drupal Check.
+# Use: Run Drupal-focused PHP static analysis checks, including PHPCS, PHPStan,
+#      GrumPHP, and Drupal Check.
 
 name: Run PHP static analysis.
 
@@ -28,12 +28,20 @@ on:
         description: 'Whether to run PHPStan checks.'
         type: boolean
         default: false
+      grumphp:
+        description: 'Whether to run GrumPHP checks.'
+        type: boolean
+        default: false
       drupal_check:
-        description: 'Directories for the Drupal Check scan, or empty to disable.'
+        description: 'Whether to run Drupal Check.'
+        type: boolean
+        default: false
+      drupal_check_directories:
+        description: 'Directories for the Drupal Check scan.'
         type: string
         default: ''
       drupal_check_level:
-        description: 'Directories for the Drupal Check scan, or empty to disable.'
+        description: 'Directories for the Drupal Check scan.'
         type: string
         default: 'a'
 
@@ -88,9 +96,32 @@ jobs:
           cd ${{ inputs.directory }}
           ./vendor/bin/phpstan
 
+  grumphp:
+    name: 'GrumPHP coding standards check'
+    if: inputs.grumphp != ''
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    steps:
+      - name: Restore build from a previous step.
+        uses: actions/cache/restore@v5
+        id: restore-build
+        with:
+          path: ./*
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Run GrumPHP checks.
+        run: |
+          cd ${{ inputs.directory }}
+          ./vendor/bin/grumphp run
+
   drupal-check:
     name: 'Drupal Check Analysis'
-    if: inputs.drupal_check != ''
+    if: inputs.drupal_check
     runs-on: ubuntu-latest
     container: ${{ inputs.container }}
     steps:
