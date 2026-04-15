@@ -52,7 +52,7 @@ jobs:
       # It's safe to use a checkout here, instead of the cached build, just to
       # get access to the script.
       - name: Check out the code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Create multi-dev-safe branch name.
         id: safe_branch
@@ -94,7 +94,7 @@ jobs:
       # It's safe to use a checkout here, instead of the cached build, just to
       # get access to the script.
       - name: Check out the code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Set up the SSH key and configuration.
         uses: shimataro/ssh-key-action@v2

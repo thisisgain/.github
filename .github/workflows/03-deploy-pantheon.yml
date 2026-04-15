@@ -59,7 +59,7 @@ jobs:
       REMOTE_REPO: ${{ secrets.REMOTE_REPO }}
     steps:
       - name: Check out the code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
         with:
           # Use a substantial depth so Pantheon doesn't have orphans.
           fetch-depth: 50

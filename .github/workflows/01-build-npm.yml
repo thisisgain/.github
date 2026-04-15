@@ -104,7 +104,7 @@ jobs:
         if: |
           (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
           inputs.source_key == ''
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Preserve the NPM cache.
         # Skip if we already have a full build.

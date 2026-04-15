@@ -40,7 +40,7 @@ jobs:
       # It's safe to use a checkout here, instead of the cached build, just to
       # get access to the script.
       - name: Check out the code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Create multidev-safe branch name.
         id: safe_branch
