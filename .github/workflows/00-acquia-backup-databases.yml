@@ -48,7 +48,7 @@ jobs:
 
       - name: Install ACLI
         run: |
-          curl -OL https://github.com/acquia/cli/releases/download/2.24.0/acli.phar
+          curl -OL https://github.com/acquia/cli/releases/latest/download/acli.phar
           echo "ACLI downloaded!"
 
       - name: Authorise with ACLI

@@ -60,7 +60,7 @@ defaults:
 
 jobs:
   npm-build:
-    name: Build using npm
+    name: Build using NPM
     runs-on: ubuntu-latest
     container: ${{ inputs.container }}
     steps:

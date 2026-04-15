@@ -42,7 +42,7 @@ jobs:
       - name: Check out the code
         uses: actions/checkout@v6
 
-      - name: Create multidev-safe branch name.
+      - name: Create multidev-safe branch name
         id: safe_branch
         uses: thisisgain/.github/.github/actions/pantheon-safe-branch@migration
         with:
@@ -50,12 +50,12 @@ jobs:
           strip_prefix: ${{ inputs.strip_prefix }}
           safe_prefix: ${{ inputs.safe_prefix }}
 
-      - name: Installing PHP
+      - name: Install PHP
         uses: shivammathur/setup-php@master
         with:
           php-version: '8.2'
 
-      - name: Install Terminus.
+      - name: Install Terminus
         uses: pantheon-systems/terminus-github-actions@v1
         with:
           pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}

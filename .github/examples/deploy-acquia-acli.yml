@@ -1,0 +1,42 @@
+name: "Example workflow: Deploy code to Acquia with ACLI"
+
+# This workflow will push the codebase to Acquia using the ACLI tool.
+
+on:
+  # Allow manual trigger.
+  workflow_dispatch:
+  # This can be triggered by a branch or a tag.
+  push:
+    branches:
+      - 'release/*'
+      - 'hotfix/*'
+    tags:
+      - '*'
+
+defaults:
+  run:
+    shell: bash
+
+# Wait for any previous jobs to finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  # Push the code to the remote repository.
+  push-code:
+    name: 'Deploy: push code to Acquia with ACLI.'
+    uses: thisisgain/.github/.github/workflows/03-deploy-acli.yml@main
+    with:
+      # The commit details should be an automation account, with a shared email;
+      # the SSH config in secrets use these credentials, and the user should be
+      # able to access the remote repo (eg add as a user).
+      git_name: GAIN Automation
+      git_email: geeks+client.gha@thisisgain.com
+      # The target branch is used for deploying a tag: ACLI requires a push to a
+      # branch at the same time. The branch name is automatically detected if
+      # this is triggered by a push to a branch.
+      target_branch: main
+    secrets:
+      REMOTE_REPO: ${{ secrets.REMOTE_REPO }}
+      ACLI_CLIENT_ID: ${{ secrets.ACLI_CLIENT_ID }}
+      ACLI_CLIENT_SECRET: ${{ secrets.ACLI_CLIENT_SECRET }}

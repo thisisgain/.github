@@ -1,0 +1,96 @@
+# Name: Deploy to Acquia using ACLI.
+# Type: Deploy.
+# Use: Use ACLI to push an artifact to Acquia.
+
+name: Push an artifact to Acquia using ACLI.
+
+on:
+  workflow_call:
+    inputs:
+      git_name:
+        description: "The Git committer name. Can be hardcoded, or get the triggering user's name."
+        type: string
+        required: true
+      git_email:
+        description: "The Git committer email. Can be hardcoded, or get the triggering user's email."
+        type: string
+        required: true
+      target_branch:
+        description: 'For tag deployments, set the branch to push to alongside the tag.'
+        type: string
+        required: false
+      php_version:
+        description: 'Optionally, specify a PHP version to install. Default: 8.2.'
+        type: string
+        required: false
+        default: '8.2'
+    secrets:
+      REMOTE_REPO:
+        description: 'The remote repository URL.'
+        required: true
+      ACLI_CLIENT_ID:
+        description: 'The client ID for authenticating with ACLI.'
+        required: true
+      ACLI_CLIENT_SECRET:
+        description: 'The client secret for authenticating with ACLI.'
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  push-code:
+    name: 'Push code to Acquia using ACLI'
+    runs-on: ubuntu-latest
+    env:
+      GIT_COMMITTER_NAME: ${{ inputs.git_name }}
+      GIT_COMMITTER_EMAIL: ${{ inputs.git_email }}
+      TARGET_BRANCH: ${{ inputs.target_branch }}
+      GITHUB_REF: ${{ github.head_ref || github.ref_name }}
+    steps:
+      # ACLI push:artifact builds a whole artifact. Checkout the clean branch.
+      - name: Check out the code
+        uses: actions/checkout@v6
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@master
+        with:
+          php-version: ${{ inputs.php_version }}
+
+      - name: Install ACLI
+        run: |
+          curl -OL https://github.com/acquia/cli/releases/latest/download/acli.phar
+
+      - name: Authorise with ACLI
+        run: |
+          php acli.phar auth:login \
+            --no-interaction
+            --key="${{ secrets.ACLI_CLIENT_ID }}" \
+            --secret="${{ secrets.ACLI_CLIENT_SECRET }}"
+
+      - name: Configure Git
+        run: |
+          git config --global user.name $GIT_COMMITTER_NAME
+          git config --global user.email "$GIT_COMMITTER_EMAIL"
+          git config --global --add safe.directory $(realpath .)
+
+      - name: Deploy branch to Acquia
+        if: startsWith(github.ref, 'refs/heads/')
+        run: |
+          php acli.phar push:artifact \
+            --no-interaction
+            --destination-git-urls="${{ secrets.REMOTE_REPO }}"
+            --destination-git-branch="$GITHUB_REF"
+
+      - name: Deploy tag to Acquia
+        # Only deploy tags if there is a corresponding target branch.
+        if: |
+          startsWith(github.ref, 'refs/tags/') &&
+          inputs.target_branch != ''
+        run: |
+          php acli.phar push:artifact \
+            --no-interaction
+            --destination-git-urls="${{ secrets.REMOTE_REPO }}"
+            --destination-git-branch="${{ inputs.target_branch }}"
+            --destination-git-tag="$GITHUB_REF"
