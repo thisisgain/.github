@@ -65,8 +65,8 @@ jobs:
           PANTHEON_SITE_URL: "pantheonsite.io"
         run: |
           terminus multidev:create \
-            $pantheon_machine_name.dev ${{ steps.safe_branch.outputs.branch_name }} \
+            $PANTHEON_MACHINE_NAME.dev ${{ steps.safe_branch.outputs.branch_name }} \
             --no-files \
             --no-interaction
           echo "⚡ Multidev site created!" >> $GITHUB_STEP_SUMMARY
-          echo "You can access it at: https://${{ steps.safe_branch.outputs.branch_name }}-$pantheon_machine_name.$PANTHEON_SITE_URL" >> $GITHUB_STEP_SUMMARY
+          echo "You can access it at: https://${{ steps.safe_branch.outputs.branch_name }}-$PANTHEON_MACHINE_NAME.$PANTHEON_SITE_URL" >> $GITHUB_STEP_SUMMARY
