@@ -90,7 +90,7 @@ jobs:
           php acli.phar push:artifact \
             --no-interaction
             --destination-git-urls ${{ secrets.REMOTE_REPO }}
-            --destination-git-branch="$GITHUB_REF"
+            --destination-git-branch $GITHUB_REF
 
       - name: Deploy tag to Acquia
         # Only deploy tags if there is a corresponding target branch.
@@ -101,4 +101,4 @@ jobs:
           php acli.phar push:artifact -n \
             --destination-git-urls ${{ secrets.REMOTE_REPO }}
             --destination-git-branch ${{ inputs.target_branch }}
-            --destination-git-tag="$GITHUB_REF"
+            --destination-git-tag $GITHUB_REF
