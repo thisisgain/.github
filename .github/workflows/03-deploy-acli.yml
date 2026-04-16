@@ -65,8 +65,8 @@ jobs:
       - name: Authorise with ACLI
         run: |
           php acli.phar auth:login -n \
-            --key="${{ secrets.ACLI_CLIENT_ID }}" \
-            --secret="${{ secrets.ACLI_CLIENT_SECRET }}"
+            --key ${{ secrets.ACLI_CLIENT_ID }} \
+            --secret ${{ secrets.ACLI_CLIENT_SECRET }}
 
       - name: Configure Git
         run: |
@@ -79,7 +79,7 @@ jobs:
         run: |
           php acli.phar push:artifact \
             --no-interaction
-            --destination-git-urls="${{ secrets.REMOTE_REPO }}"
+            --destination-git-urls ${{ secrets.REMOTE_REPO }}
             --destination-git-branch="$GITHUB_REF"
 
       - name: Deploy tag to Acquia
@@ -89,6 +89,6 @@ jobs:
           inputs.target_branch != ''
         run: |
           php acli.phar push:artifact -n \
-            --destination-git-urls="${{ secrets.REMOTE_REPO }}"
-            --destination-git-branch="${{ inputs.target_branch }}"
+            --destination-git-urls ${{ secrets.REMOTE_REPO }}
+            --destination-git-branch ${{ inputs.target_branch }}
             --destination-git-tag="$GITHUB_REF"
