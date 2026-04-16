@@ -66,10 +66,11 @@ jobs:
       - name: Install ACLI
         run: |
           curl -OL https://github.com/acquia/cli/releases/latest/download/acli.phar
+          chmod +x acli.phar && sudo mv acli.phar /usr/local/bin/acli
 
       - name: Authorise with ACLI
         run: |
-          php acli.phar auth:login -n \
+          acli auth:login -n \
             --key ${{ secrets.ACLI_CLIENT_ID }} \
             --secret ${{ secrets.ACLI_CLIENT_SECRET }}
 
@@ -86,7 +87,7 @@ jobs:
       - name: Deploy branch to Acquia
         if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pull/')
         run: |
-          php acli.phar push:artifact \
+          acli push:artifact \
             --no-interaction
             --destination-git-urls ${{ secrets.REMOTE_REPO }}
             --destination-git-branch $GITHUB_REF
@@ -97,7 +98,7 @@ jobs:
           startsWith(github.ref, 'refs/tags/') &&
           inputs.target_branch != ''
         run: |
-          php acli.phar push:artifact -n \
+          acli push:artifact -n \
             --destination-git-urls ${{ secrets.REMOTE_REPO }}
             --destination-git-branch ${{ inputs.target_branch }}
             --destination-git-tag $GITHUB_REF
