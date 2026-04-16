@@ -24,6 +24,11 @@ on:
         type: string
         required: false
         default: '8.2'
+      directory:
+        description: 'Optionally, the directory to check for git diffs.'
+        type: string
+        required: false
+        default: './'
     secrets:
       REMOTE_REPO:
         description: 'The remote repository URL.'
@@ -73,6 +78,11 @@ jobs:
           git config --global user.name $GIT_COMMITTER_NAME
           git config --global user.email "$GIT_COMMITTER_EMAIL"
           git config --global --add safe.directory $(realpath .)
+
+      - name: Check for any further Git changes
+        run: |
+          git diff ${{ inputs.directory }}
+          git diff-index --quiet HEAD -- ${{ inputs.directory }}
 
       - name: Deploy branch to Acquia
         if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pull/')
