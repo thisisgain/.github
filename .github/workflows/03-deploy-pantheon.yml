@@ -41,7 +41,7 @@ on:
       SSH_CONFIG:
         description: 'SSH configuration. Can be an empty secret, or not included.'
       KNOWN_HOSTS:
-        description: 'SSH known hosts. Set using `ssh-keygen` command. Required for remote repo.'
+        description: 'SSH known hosts. Set using `ssh-keyscan` command. Required for remote repo.'
         required: true
 
 defaults:

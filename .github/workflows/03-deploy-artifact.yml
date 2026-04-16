@@ -55,7 +55,7 @@ on:
       SSH_CONFIG:
         description: 'SSH configuration. Can be an empty secret, or not included.'
       KNOWN_HOSTS:
-        description: 'SSH known hosts. Set using `ssh-keygen` command.'
+        description: 'SSH known hosts. Set using `ssh-keyscan` command.'
         required: true
       GITHUB_READ_TOKEN:
         description: 'The read access token for Github, required for the unshallow fetch.'

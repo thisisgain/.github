@@ -33,6 +33,14 @@ on:
       REMOTE_REPO:
         description: 'The remote repository URL.'
         required: true
+      REMOTE_SSH_KEY:
+        description: 'Private SSH key authorised to push to the remote repository.'
+        required: true
+      SSH_CONFIG:
+        description: 'SSH configuration. Can be an empty secret, or not included.'
+      KNOWN_HOSTS:
+        description: 'SSH known hosts. Set using `ssh-keyscan` command. Required for remote repo.'
+        required: true
       ACLI_CLIENT_ID:
         description: 'The client ID for authenticating with ACLI.'
         required: true
@@ -67,6 +75,13 @@ jobs:
         run: |
           curl -OL https://github.com/acquia/cli/releases/latest/download/acli.phar
           chmod +x acli.phar && sudo mv acli.phar /usr/local/bin/acli
+
+      - name: Set up the SSH key and configuration.
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.REMOTE_SSH_KEY }}
+          config: ${{ secrets.SSH_CONFIG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
       - name: Authorise with ACLI
         run: |

@@ -21,7 +21,7 @@ on:
       SSH_CONFIG:
         description: 'SSH configuration. Can be an empty secret, or not included.'
       KNOWN_HOSTS:
-        description: 'SSH known hosts. Set using `ssh-keygen` command.'
+        description: 'SSH known hosts. Set using `ssh-keyscan` command.'
         required: true
 
 defaults:
