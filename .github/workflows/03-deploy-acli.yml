@@ -81,8 +81,7 @@ jobs:
 
       - name: Check for any further Git changes
         run: |
-          git diff ${{ inputs.directory }}
-          git diff-index HEAD -- ${{ inputs.directory }}
+          git add . && git diff-index --cached --quiet HEAD
 
       - name: Deploy branch to Acquia
         if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pull/')
