@@ -75,7 +75,7 @@ jobs:
           git config --global --add safe.directory $(realpath .)
 
       - name: Deploy branch to Acquia
-        if: startsWith(github.ref, 'refs/heads/')
+        if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pull/')
         run: |
           php acli.phar push:artifact \
             --no-interaction
