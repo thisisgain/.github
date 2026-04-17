@@ -62,7 +62,7 @@ jobs:
       TARGET_BRANCH: ${{ inputs.target_branch }}
       # Gets the branch name (if a pull request), or the branch/tag that
       # triggered the run (if not).
-      GITHUB_REF: ${{ github.head_ref || github.ref_name }}
+      SOURCE_REF: ${{ github.head_ref || github.ref_name }}
     steps:
       # ACLI push:artifact builds a whole artifact. Checkout the clean branch.
       - name: Check out the code
@@ -103,11 +103,11 @@ jobs:
           startsWith(github.ref, 'refs/heads/') ||
           startsWith(github.ref, 'refs/pull/')
         run: |
-          echo "Pushing to $GITHUB_REF"
+          echo "Pushing to $SOURCE_REF"
           acli push:artifact -n \
             --destination-git-urls ${{ secrets.REMOTE_REPO }} \
-            --destination-git-branch $GITHUB_REF
-          echo ":droplet: Branch $GITHUB_REF pushed to Acquia!" >> $GITHUB_STEP_SUMMARY
+            --destination-git-branch $SOURCE_REF
+          echo ":droplet: Branch $SOURCE_REF pushed to Acquia!" >> $GITHUB_STEP_SUMMARY
 
       - name: Deploy tag to Acquia
         # Only deploy tags if there is a corresponding target branch.
@@ -116,9 +116,9 @@ jobs:
           startsWith(github.ref, 'refs/tags/') &&
           inputs.target_branch != ''
         run: |
-          echo "Pushing to $GITHUB_REF"
+          echo "Pushing to $SOURCE_REF"
           acli push:artifact -n \
             --destination-git-urls ${{ secrets.REMOTE_REPO }} \
             --destination-git-branch ${{ inputs.target_branch }} \
-            --destination-git-tag $GITHUB_REF
-          echo ":droplet: Tag $GITHUB_REF pushed to Acquia!" >> $GITHUB_STEP_SUMMARY
+            --destination-git-tag $SOURCE_REF
+          echo ":droplet: Tag $SOURCE_REF pushed to Acquia!" >> $GITHUB_STEP_SUMMARY
