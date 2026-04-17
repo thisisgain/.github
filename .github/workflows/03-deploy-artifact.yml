@@ -57,7 +57,7 @@ on:
       KNOWN_HOSTS:
         description: 'SSH known hosts. Set using `ssh-keyscan` command.'
         required: true
-      GITHUB_READ_TOKEN:
+      GITHUB_ACCESS_TOKEN:
         description: 'The read access token for Github, required for the unshallow fetch.'
         required: true
 
@@ -105,7 +105,7 @@ jobs:
         run: |
           echo "COMMIT_SHA=`git log -1 --pretty=format:"%s" | cut -d' ' -f2`" >> $GITHUB_ENV
           echo "COMMIT_REF=refs/heads/$COMMIT_BRANCH" >> $GITHUB_ENV
-          echo "COMMIT_MSG=`curl -H 'authorization: Bearer ${{ secrets.GITHUB_READ_TOKEN }}' https://api.github.com/repos/${{ github.repository }}/commits/$COMMIT_BRANCH | grep '"message":' | grep -oE ': ".*",' | cut -c4- | rev | cut -c3- | rev`" >> $GITHUB_ENV
+          echo "COMMIT_MSG=`curl -H 'authorization: Bearer ${{ secrets.GITHUB_ACCESS_TOKEN }}' https://api.github.com/repos/${{ github.repository }}/commits/$COMMIT_BRANCH | grep '"message":' | grep -oE ': ".*",' | cut -c4- | rev | cut -c3- | rev`" >> $GITHUB_ENV
 
       - name: Set up the SSH key and configuration.
         uses: shimataro/ssh-key-action@v2
@@ -123,7 +123,7 @@ jobs:
         # At some replace this with trying to build on top of the parent when
         # there isn't a previous build in the same branch.
         run: |
-          git remote set-url origin $(git remote get-url origin | sed 's#https://#https://${{ secrets.GITHUB_READ_TOKEN }}:${{ secrets.GITHUB_READ_TOKEN }}@#')
+          git remote set-url origin $(git remote get-url origin | sed 's#https://#https://${{ secrets.GITHUB_ACCESS_TOKEN }}:${{ secrets.GITHUB_ACCESS_TOKEN }}@#')
           git fetch --unshallow origin
 
       - name: Checkout artifact branch without changing local files.

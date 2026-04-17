@@ -83,4 +83,4 @@ jobs:
       REMOTE_SSH_KEY: ${{ secrets.REMOTE_SSH_KEY }}
       SSH_CONFIG: ${{ secrets.SSH_CONFIG }}
       KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
-      GITHUB_READ_TOKEN: ${{ secrets.GITHUB_READ_TOKEN }}
+      GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_ACCESS_TOKEN }}
