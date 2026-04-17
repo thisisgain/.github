@@ -235,7 +235,7 @@ but the value will differ.
 | **Remote repository**                  |
 | `REMOTE_REPO`            | The URL of the remote/target repository, where the work should be deployed to. |
 | `REMOTE_SSH_KEY`         | A private SSH key authorised to push to the remote repository. |
-| `GITHUB_ACCESS_TOKEN`      | A GitHub access token authorised to interact with a remote repository. Depending on context, may only need to be a read token, but could be write. |
+| `GITHUB_ACCESS_TOKEN`      | A GitHub access token authorised to interact with a remote repository. Normally, pass in `${{ secrets.GITHUB_TOKEN }}``. |
 | **Hosting specific: Acquia**           |
 | `ACQUIA_ENVIRONMENT_ID`  | The Acquia environment ID. |
 | `ACLI_CLIENT_ID`         | A client ID for authenticating with Acquia CLI. |
