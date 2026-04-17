@@ -60,6 +60,8 @@ jobs:
       GIT_COMMITTER_NAME: ${{ inputs.git_name }}
       GIT_COMMITTER_EMAIL: ${{ inputs.git_email }}
       TARGET_BRANCH: ${{ inputs.target_branch }}
+      # Gets the branch name (if a pull request), or the branch/tag that
+      # triggered the run (if not).
       GITHUB_REF: ${{ github.head_ref || github.ref_name }}
     steps:
       # ACLI push:artifact builds a whole artifact. Checkout the clean branch.
@@ -95,20 +97,19 @@ jobs:
           git config --global user.email "$GIT_COMMITTER_EMAIL"
           git config --global --add safe.directory $(realpath .)
 
-      - name: Check for any further Git changes
-        run: |
-          git add . && git diff-index --cached --quiet HEAD
-
       - name: Deploy branch to Acquia
-        if: startsWith(github.ref, 'refs/heads/') || startsWith(github.ref, 'refs/pull/')
+        # Check the fully-qualified ref here, instead of the environment var.
+        if: |
+          startsWith(github.ref, 'refs/heads/') ||
+          startsWith(github.ref, 'refs/pull/')
         run: |
-          acli push:artifact \
-            --no-interaction
+          acli push:artifact -n \
             --destination-git-urls ${{ secrets.REMOTE_REPO }}
             --destination-git-branch $GITHUB_REF
 
       - name: Deploy tag to Acquia
         # Only deploy tags if there is a corresponding target branch.
+        # Check the fully-qualified ref here, instead of the environment var.
         if: |
           startsWith(github.ref, 'refs/tags/') &&
           inputs.target_branch != ''
