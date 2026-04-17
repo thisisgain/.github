@@ -104,7 +104,7 @@ jobs:
           startsWith(github.ref, 'refs/pull/')
         run: |
           acli push:artifact -n \
-            --destination-git-urls ${{ secrets.REMOTE_REPO }}
+            --destination-git-urls ${{ secrets.REMOTE_REPO }} \
             --destination-git-branch $GITHUB_REF
 
       - name: Deploy tag to Acquia
@@ -115,6 +115,6 @@ jobs:
           inputs.target_branch != ''
         run: |
           acli push:artifact -n \
-            --destination-git-urls ${{ secrets.REMOTE_REPO }}
-            --destination-git-branch ${{ inputs.target_branch }}
+            --destination-git-urls ${{ secrets.REMOTE_REPO }} \
+            --destination-git-branch ${{ inputs.target_branch }} \
             --destination-git-tag $GITHUB_REF
