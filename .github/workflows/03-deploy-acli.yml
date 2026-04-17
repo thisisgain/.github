@@ -119,6 +119,6 @@ jobs:
           echo "Pushing to $SOURCE_REF"
           acli push:artifact -n \
             --destination-git-urls ${{ secrets.REMOTE_REPO }} \
-            --destination-git-branch ${{ inputs.target_branch }} \
+            --destination-git-branch $TARGET_BRANCH \
             --destination-git-tag $SOURCE_REF
           echo ":droplet: Tag $SOURCE_REF pushed to Acquia!" >> $GITHUB_STEP_SUMMARY

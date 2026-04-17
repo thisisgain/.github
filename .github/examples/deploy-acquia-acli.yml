@@ -38,5 +38,8 @@ jobs:
       target_branch: main
     secrets:
       REMOTE_REPO: ${{ secrets.REMOTE_REPO }}
+      REMOTE_SSH_KEY: ${{ secrets.REMOTE_SSH_KEY }}
+      SSH_CONFIG: ''
+      KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
       ACLI_CLIENT_ID: ${{ secrets.ACLI_CLIENT_ID }}
       ACLI_CLIENT_SECRET: ${{ secrets.ACLI_CLIENT_SECRET }}
