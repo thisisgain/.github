@@ -103,9 +103,11 @@ jobs:
           startsWith(github.ref, 'refs/heads/') ||
           startsWith(github.ref, 'refs/pull/')
         run: |
+          echo "Pushing to $GITHUB_REF"
           acli push:artifact -n \
             --destination-git-urls ${{ secrets.REMOTE_REPO }} \
             --destination-git-branch $GITHUB_REF
+          echo ":droplet: Branch $GITHUB_REF pushed to Acquia!" >> $GITHUB_STEP_SUMMARY
 
       - name: Deploy tag to Acquia
         # Only deploy tags if there is a corresponding target branch.
@@ -114,7 +116,9 @@ jobs:
           startsWith(github.ref, 'refs/tags/') &&
           inputs.target_branch != ''
         run: |
+          echo "Pushing to $GITHUB_REF"
           acli push:artifact -n \
             --destination-git-urls ${{ secrets.REMOTE_REPO }} \
             --destination-git-branch ${{ inputs.target_branch }} \
             --destination-git-tag $GITHUB_REF
+          echo ":droplet: Tag $GITHUB_REF pushed to Acquia!" >> $GITHUB_STEP_SUMMARY

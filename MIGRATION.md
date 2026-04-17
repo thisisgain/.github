@@ -87,4 +87,63 @@ be updated.
 
 ## Catch Digital/Bitbucket
 
-...
+Coming from Bitbucket Pipelines to Github Actions, there are a few things to
+check:
+
+1. The image: pipelines will likely run on `catchdigital/toolbox` which includes
+   a number of useful tools and features. If you choose to use `ubuntu-latest`
+   or another Docker image, you may need to manually install tools within that
+   toolbox, eg `acli`, `python2` (no longer supported but required for some old
+   front-end build tasks), etc.
+2. Composer scripts: some tasks are defined in the project's `composer.json`
+   file. You can keep using them, but some of them have equivalents in the new
+   workflow files that could replace them.
+3. Users and authentication: most sites will use `support@catchdigital.com` to
+   authenticate with remote hosts, or for Git commits. Each client should have
+   their own account, `geeks+CLIENT.gha@thisisgain.com`, which should have its
+   own SSH key and be added to associated services (eg hosting platforms).
+4. Secrets: make sure to go through the pipelines file and check for any
+   variables, eg `$ACQUIA_SECRET`, that should be recreated as secrets on
+   Github. Some variables, eg `$BITBUCKET_BRANCH`, do not need to be created as
+   secrets, so it's worth reviewing carefully. There may be additional secrets
+   that will need to be created - review the workflows you're hoping to use.
+
+### Recommended structure
+
+Bitbucket only requires a single pipeline file, but you can have multiple files
+on Github. Depending on the type of project and the deployment process, the
+following is recommended:
+
+* For ongoing review of work, `pull-request.yml`:
+  - Acts on pull requests, whenever they're opened or updated.
+  - Build and test the site (both back- and front-end).
+  - If the "build" label is applied to a pull request, push a complete artifact
+    to the hosting platform, so it can be tested.
+* For deployment to a remote host, `deploy.yml`:
+  - For automated deployments, act when pull requests are merged or when a tag
+    is published.
+  - For manual deployments, only act on workflow trigger, either against a
+    branch or a tag.
+  - Build and push a complete artifact to the hosting platform for deployment.
+
+### Suggested workflows
+
+Roughly, each "step" in a Bitbucket pipeline corresponds to a job in a workflow.
+
+This is just a guide/suggestion for the workflows that could replace steps in a
+pipelines file.
+
+| Pipelines step | Suggested workflow |
+| -------------- | ------------------ |
+| `&install-composer` | `01-build-composer.yml` |
+| `&install-node` | `01-build-npm.yml` |
+| `&deploy-branch` | `03-deploy-XXX.yml`, where `XXX` is the deployment method |
+| `&deploy-tag` | `03-deploy-XXX.yml`, where `XXX` is the deployment method |
+
+You may want to break some steps down further, where they have multiple scripts.
+For example the `&install-composer` step installs and validates the Composer
+build, which is covered by `01-build-composer.yml`. It may also run a
+`composer drupal:validate` script, which runs a GrumPHP code scan. This is
+included in `02-test-php-analysis.yml`, along with several other scanning tools.
+If you choose to use this separate workflow, you could take advantage of more
+testing tools.
