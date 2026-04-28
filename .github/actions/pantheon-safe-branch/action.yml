@@ -1,0 +1,27 @@
+# Name: Generate a Pantheon multidev-safe branch name.
+# Type: Action.
+# Use: Pantheon has restrictions on branch names for multidev environments. This
+#      is a reusable action that will consistently generate a safe branch name.
+
+name: Generate a Pantheon multidev-safe branch name
+description: 'Generate a branch name that is suitable for creating a Pantheon multidev environment.'
+
+inputs:
+  branch_name:
+    description: 'The source branch name.'
+    required: true
+  strip_prefix:
+    description: 'Optionally, a prefix to strip.'
+    required: false
+  safe_prefix:
+    description: 'Optional single letter safe prefix.'
+    required: false
+    default: 't'
+
+outputs:
+  branch_name:
+    description: 'The multidev safe branch name.'
+
+runs:
+  using: 'node24'
+  main: 'index.js'

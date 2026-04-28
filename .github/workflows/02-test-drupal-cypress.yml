@@ -1,0 +1,114 @@
+# Name: Run Drupal Cypress tests.
+# Type: Test.
+# Use: Run Drupal Cypress tests.
+
+name: Run Drupal Cypress tests.
+
+on:
+  workflow_call:
+    inputs:
+      container:
+        description: 'The Docker image to use.'
+        type: string
+        required: true
+      db_image:
+        description: 'The database Docker image to use.'
+        type: string
+        default: 'mysql:5.7'
+      db_user:
+        description: 'The database username.'
+        type: string
+        default: 'db'
+      db_pass:
+        description: 'The database password.'
+        type: string
+        default: 'db'
+      db_name:
+        description: 'The database name.'
+        type: string
+        default: 'db'
+      db_root_pass:
+        description: 'The database root password.'
+        type: string
+        default: 'root'
+      source_key:
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
+        type: string
+        default: 'composer'
+      source_path:
+        description: 'The path of the source cache.'
+        type: string
+        default: ./*
+      docroot:
+        description: 'The docroot where Drupal is installed.'
+        type: string
+        default: 'docroot'
+      base_url:
+        description: 'The non-prefixed local base URL, eg website.ddev.site.'
+        type: string
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  postman:
+    name: 'Cypress tests'
+    # Run slow tests on self-hosted infrastructure.
+    runs-on: [self-hosted, linux]
+    container: ${{ inputs.container }}
+    services:
+      db:
+        image: ${{ inputs.db_image }}
+        ports: [ 3306 ]
+        env:
+          MYSQL_USER: ${{ inputs.db_user }}
+          MYSQL_PASSWORD: ${{ inputs.db_pass }}
+          MYSQL_DATABASE: ${{ inputs.db_name }}
+          MYSQL_ROOT_PASSWORD: ${{ inputs.db_root_pass }}
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+    steps:
+      - name: Restore build from a previous step.
+        uses: actions/cache/restore@v5
+        id: restore-build
+        with:
+          path: ${{ inputs.source_path }}
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Get host IP address for Cypress requests within the docker network
+        run: echo "CYPRESS_HOST=$(hostname -I | xargs)" >> $GITHUB_ENV
+
+      - name: Set up Drupal for Cypress tests
+        run: |
+          ./vendor/bin/drush site:install --existing-config
+          touch ./cypress/.running
+          ./vendor/bin/drush cr
+          echo '{"base_url":"https://${{ inputs.base_url }}"}' > cypress/fixtures/general_config.json
+          (cd ${{ inputs.docroot }} && php -S 0.0.0.0:80 .ht.router.php > /tmp/php-log.txt 2>&1 & )
+
+      - name: Run Cypress tests via a Docker action
+        uses: thisisgain/.github/.github/actions/cypress@migration
+        id: cypress
+        with:
+          hosts_entry: "${{ env.CYPRESS_HOST }} ${{ inputs.base_url }}"
+
+      - name: Show watchdog logs on failure.
+        if: failure()
+        run: ./vendor/bin/drush watchdog:show --count 100
+
+      - name: Output PHP logs on error.
+        if: failure()
+        run: cat /tmp/php-log.txt
+
+      - name: Upload cypress artifacts
+        if: failure() && steps.cypress.outcome == 'failure'
+        uses: actions/upload-artifact@v2
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots

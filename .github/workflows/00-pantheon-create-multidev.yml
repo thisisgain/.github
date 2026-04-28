@@ -1,0 +1,72 @@
+# Name: Create a multidev environment on Pantheon.
+# Type: Helper.
+# Use: Create a multidev environment using the current branch on Pantheon.
+
+name: Create Pantheon multidev environment.
+
+on:
+  workflow_call:
+    inputs:
+      pantheon_machine_name:
+        description: 'Pantheon site name.'
+        type: string
+        required: true
+      strip_prefix:
+        description: 'Optionally, a prefix to strip.'
+        type: string
+        required: false
+      safe_prefix:
+        description: 'Optional single letter safe prefix.'
+        type: string
+        required: false
+        default: 't'
+    secrets:
+      PANTHEON_MACHINE_TOKEN:
+        description: 'Machine token authorised to the Pantheon site.'
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  create-multidev:
+    name: 'Create a Pantheon multidev environment'
+    runs-on: ubuntu-latest
+    env:
+      BRANCH_NAME: ${{ github.head_ref }}
+      PANTHEON_MACHINE_NAME: ${{ inputs.pantheon_machine_name }}
+    steps:
+      # It's safe to use a checkout here, instead of the cached build, just to
+      # get access to the script.
+      - name: Check out the code
+        uses: actions/checkout@v6
+
+      - name: Create multidev-safe branch name
+        id: safe_branch
+        uses: thisisgain/.github/.github/actions/pantheon-safe-branch@migration
+        with:
+          branch_name: ${{ github.head_ref }}
+          strip_prefix: ${{ inputs.strip_prefix }}
+          safe_prefix: ${{ inputs.safe_prefix }}
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@master
+        with:
+          php-version: '8.2'
+
+      - name: Install Terminus
+        uses: pantheon-systems/terminus-github-actions@v1
+        with:
+          pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
+
+      - name: Create or update a multidev environment.
+        env:
+          PANTHEON_SITE_URL: "pantheonsite.io"
+        run: |
+          terminus multidev:create \
+            $PANTHEON_MACHINE_NAME.dev ${{ steps.safe_branch.outputs.branch_name }} \
+            --no-files \
+            --no-interaction
+          echo "⚡ Multidev site created!" >> $GITHUB_STEP_SUMMARY
+          echo "You can access it at: https://${{ steps.safe_branch.outputs.branch_name }}-$PANTHEON_MACHINE_NAME.$PANTHEON_SITE_URL" >> $GITHUB_STEP_SUMMARY

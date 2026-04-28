@@ -1,0 +1,32 @@
+name: "Example workflow: Back up production database using ACLI"
+
+# This job only runs when a release is marked as "This is the latest release".
+# That makes it an ideal task to run before a planned producton deployment takes
+# place, especially for Site Factory sites.
+#
+# It can run before or after code has been deployed to Acquia, but the code
+# shouldn't be switched in the Acquia UI until after this has completed
+# successfully.
+
+on:
+  # When a release is marked as "released" (ie, the latest release).
+  release:
+    types:
+      - released
+
+# Wait for previous jobs to finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  backup-databases:
+    name: 'Task: Backup production databases'
+    uses: thisisgain/.github/.github/workflows/00-acquia-backup-databases.yml@main
+    with:
+      # Database name does not end in 'dev' or 'test'. Any number of suffixes
+      # can be added here, if needs be.
+      filter: 'name!@*dev;name!@*test'
+    secrets:
+      ACQUIA_ENVIRONMENT_ID: ${{ secrets.ACQUIA_ENVIRONMENT_ID }}
+      ACLI_CLIENT_ID: ${{ secrets.ACLI_CLIENT_ID }}
+      ACLI_CLIENT_SECRET: ${{ secrets.ACLI_CLIENT_SECRET }}

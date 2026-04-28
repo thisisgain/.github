@@ -1,0 +1,30 @@
+name: "Example workflow: Deploy code to a remote repository"
+run-name: Deploying ${{ github.ref_name }}
+
+# This workflow will push the code as-is to a remote environment, without
+# performing any build tasks, on the basis that the remote repository will
+# perform its own build tasks (eg installing dependencies, building a theme).
+#
+# This is useful for mirroring code between Github and a remote repository.
+#
+# @see ./build-deploy-artifact-remote-repository.yml
+
+on:
+  # When a pull request is merged, this counts as a "push".
+  push:
+    branches:
+      - main
+
+# Wait for previous jobs to finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  deploy:
+    name: 'Deploy: push code to remote environment.'
+    uses: thisisgain/.github/.github/workflows/03-deploy-git-push.yml@main
+    secrets:
+      REMOTE_REPO: ${{ secrets.REMOTE_REPO }}
+      REMOTE_SSH_KEY: ${{ secrets.REMOTE_SSH_KEY }}
+      SSH_CONFIG: ${{ secrets.SSH_CONFIG }}
+      KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}

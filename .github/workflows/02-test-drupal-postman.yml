@@ -1,0 +1,114 @@
+# Name: Run Drupal Postman tests.
+# Type: Test.
+# Use: Run Drupal Postman tests based on a collection in the repository.
+
+name: Run Drupal Postman tests.
+
+on:
+  workflow_call:
+    inputs:
+      container:
+        description: 'The Docker image to use.'
+        type: string
+        required: true
+      db_image:
+        description: 'The database Docker image to use.'
+        type: string
+        default: 'mysql:5.7'
+      db_user:
+        description: 'The database username.'
+        type: string
+        default: 'db'
+      db_pass:
+        description: 'The database password.'
+        type: string
+        default: 'db'
+      db_name:
+        description: 'The database name.'
+        type: string
+        default: 'db'
+      db_root_pass:
+        description: 'The database root password.'
+        type: string
+        default: 'root'
+      source_key:
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
+        type: string
+        default: 'composer'
+      source_path:
+        description: 'The path of the source cache.'
+        type: string
+        default: ./*
+      docroot:
+        description: 'The docroot where Drupal is installed.'
+        type: string
+        default: 'docroot'
+      postman_collection:
+        description: 'The full path to the Postman collection file.'
+        type: string
+        required: true
+      postman_globals:
+        description: 'The full path to the Postman globals file.'
+        type: string
+        required: true
+      postman_run_data:
+        description: 'The full path to the Postman run data file.'
+        type: string
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  postman:
+    name: 'Postman tests'
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    services:
+      db:
+        image: ${{ inputs.db_image }}
+        ports: [ 3306 ]
+        env:
+          MYSQL_USER: ${{ inputs.db_user }}
+          MYSQL_PASSWORD: ${{ inputs.db_pass }}
+          MYSQL_DATABASE: ${{ inputs.db_name }}
+          MYSQL_ROOT_PASSWORD: ${{ inputs.db_root_pass }}
+        options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
+    steps:
+      - name: Restore build from a previous step.
+        uses: actions/cache/restore@v5
+        id: restore-build
+        with:
+          path: ${{ inputs.source_path }}
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Set up Drupal for Postman tests.
+        run: |
+          ./vendor/bin/drush site:install --existing-config
+          ./vendor/bin/drush cim -y
+
+      - name: Install Newman (Postman CLI).
+        run: npm install -g newman@5
+
+      - name: Run the Newman (Postman CLI) tests.
+        id: newman
+        run: |
+          (cd ${{ inputs.docroot }} && php -S 127.0.0.1:80 .ht.router.php > /tmp/php-log.txt 2>&1 & )
+          newman run \
+            ${{ inputs.postman_collection }} \
+            -g ${{ inputs.postman_globals }} \
+            -d ${{ inputs.postman_run_data }}
+
+      - name: Show watchdog logs on failure.
+        if: failure()
+        run: ./vendor/bin/drush watchdog:show --count 100
+
+      - name: Output PHP logs on error.
+        if: failure()
+        run: cat /tmp/php-log.txt

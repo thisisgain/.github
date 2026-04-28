@@ -1,0 +1,21 @@
+name: "Example workflow: Remove multidev environment"
+
+# After merging a pull request that created a multidev environment, this
+# workflow uses Terminus to delete it from Pantheon.
+#
+# @see ./build-deploy-pantheon-multidev.yml
+
+on:
+  # Act when a pull request is closed.
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  # Remove the Pantheon branch and multidev environment.
+  remove-multi-dev:
+    name: 'Deploy: remove Pantheon branch and multidev environment.'
+    uses: thisisgain/.github/.github/workflows/00-pantheon-remove-branch.yml@main
+    with:
+      pantheon_machine_name: 'project_name'
+    secrets: inherit

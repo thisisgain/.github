@@ -1,0 +1,14 @@
+{
+  "name": "pantheon-safe-branch",
+  "version": "2.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@actions/core": "^1.11.0"
+  }
+}

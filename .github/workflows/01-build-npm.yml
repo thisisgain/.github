@@ -1,0 +1,163 @@
+# Name: Build an application using Node/NPM.
+# Type: Build task.
+# Use: Using the root package-lock.json, build an application.
+
+name: Build and validate an NPM package.
+
+on:
+  workflow_call:
+    inputs:
+      directory:
+        description: 'The directory in which to run commands.'
+        type: string
+        required: true
+      container:
+        description: 'The Docker image to use.'
+        type: string
+        required: true
+      source_key:
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
+        type: string
+      target_key:
+        description: 'The target cache key suffix, or empty to throw away.'
+        type: string
+        default: 'npm'
+      target_path:
+        description: 'The target path for the cache.'
+        type: string
+        default: './*'
+      target_modules:
+        description: 'Whether to keep the `node_modules` directory from the target build.'
+        type: boolean
+        default: true
+      ssh_config:
+        description: 'Whether to run SSH configuration for asset access.'
+        type: boolean
+        default: false
+      run_build:
+        description: 'Whether to run `npm run build`.'
+        type: boolean
+        default: true
+      check_git:
+        description: 'Whether to check for changes in Git tracked files.'
+        type: boolean
+        default: true
+      run_tests:
+        description: 'Whether to run `npm run test`.'
+        type: boolean
+        default: false
+    secrets:
+      REMOTE_SSH_KEY:
+        description: 'Private SSH key to retrieve any authenticated assets.'
+      SSH_CONFIG:
+        description: 'SSH configuration. Can be an empty secret, or not included.'
+      KNOWN_HOSTS:
+        description: 'SSH known hosts. Set using `ssh-keyscan` command.'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  npm-build:
+    name: Build using NPM
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    steps:
+      - name: Disable Git safe directories as we are in a container.
+        run: git config --global --add safe.directory '*'
+
+      - name: Set up the build cache.
+        # Only run if we have a target build.
+        if: inputs.target_key != ''
+        uses: actions/cache@v5
+        id: target-build
+        with:
+          path: ${{ inputs.target_path }}
+          enableCrossOsArchive: true
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.target_key }}
+
+      - name: Restore build from a previous step.
+        # Skip if we already have a full build.
+        # Only restore if we have a source key.
+        if: |
+          (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.source_key != ''
+        uses: actions/cache/restore@v5
+        id: restore-build
+        with:
+          path: ./*
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        # Skip if we already have a full build.
+        if: |
+          (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.source_key != '' &&
+          steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Checkout the code.
+        # Skip if we already have a full build.
+        if: |
+          (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.source_key == ''
+        uses: actions/checkout@v6
+
+      - name: Preserve the NPM cache.
+        # Skip if we already have a full build.
+        if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true')
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.npm
+            ~/.nvm
+          enableCrossOsArchive: true
+          # Save the cache with the hash of the lock files.
+          key: npm-${{ hashFiles('**/package-lock.json') }}
+          # If there is no direct hit, restore the latest npm-* cache. This will
+          # first look on the current branch, then on the parent/default branch.
+          restore-keys: |
+            npm-
+
+      - name: Set up the SSH key and configuration.
+        # Skip if we already have a full build.
+        # Run if we should configure SSH.
+        if: |
+          (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.ssh_config
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.REMOTE_SSH_KEY }}
+          config: ${{ secrets.SSH_CONFIG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      - name: Install dependencies.
+        # Skip if we already have a full build.
+        if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true')
+        run: npm --prefix "${{ inputs.directory }}" ci
+
+      - name: Run the build.
+        # Skip if we already have a full build.
+        if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.run_build
+        run: npm --prefix "${{ inputs.directory }}" run build
+
+      - name: Check for changes to committed code.
+        # Skip if we already have a full build.
+        if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.check_git
+        run: |
+          git diff "${{ inputs.directory }}"
+          git diff-index --quiet HEAD "${{ inputs.directory }}"
+
+      - name: Run tests.
+        if: inputs.run_tests
+        run: npm --prefix "${{ inputs.directory }}" run test
+
+      - name: Remove node_modules from the target build.
+        # Only run if we have a target build and we don't want to keep node_modules.
+        if: (inputs.target_key != '' && inputs.target_modules != true)
+        run: rm -rf "${{ inputs.directory }}/node_modules"

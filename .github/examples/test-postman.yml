@@ -1,0 +1,50 @@
+name: "Example workflow: Run Postman tests."
+
+# Runs Postman tests on a pull request. Note: these tests are Drupal-flavoured,
+# and require a site install before they will run.
+
+on:
+  # When a pull request is opened, reopened (from closed), synchronized (with
+  # the main development branch), or a label is added, run this workflow.
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+
+defaults:
+  run:
+    shell: bash
+
+# Cancel out of date jobs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Download dependencies to build a project using a Composer lockfile.
+  composer-build:
+    name: 'Composer: build project.'
+    uses: thisisgain/.github/.github/workflows/01-build-composer.yml@main
+    with:
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
+
+  # Add the CI settings to the right place.
+  settings-build:
+    name: 'Task: add CI settings.'
+    needs: [composer-build]
+    uses: thisisgain/.github/.github/workflows/00-create-ci-settings.yml@main
+    with:
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
+
+  # Run Postman tests.
+  postman:
+    name: 'Postman: run Postman tests.'
+    needs: [settings-build]
+    uses: thisisgain/.github/.github/workflows/02-test-drupal-postman.yml@main
+    with:
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
+      postman_collection: 'postman/API.postman_collection.json'
+      postman_globals: 'postman/ci/API.globals.json'
+      postman_run_data: 'postman/ci/API.run_data.json'

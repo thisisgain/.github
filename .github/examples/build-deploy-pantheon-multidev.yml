@@ -1,0 +1,72 @@
+name: "Example workflow: Deploy code to Pantheon multidev"
+
+# This workflow will push code directly to Pantheon. Pantheon has its own tool,
+# Quicksilver, that builds Composer dependencies when code is deployed.
+#
+# Code pushed to a branch that is not called `master` will be available on the
+# dev environment, and a multidev site can be spun up. This isn't always the
+# desired behaviour, so it can be limited by checking the labels on a pull
+# request.
+#
+# This action is triggered if a "Build" label is added to a pull request.
+#
+# @see ./deploy-pantheon-default.yml
+# @see ./task-pantheon-remove-multidev.yml
+
+on:
+  # Allow manual trigger.
+  workflow_dispatch:
+  # Act when pull requests are updated.
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+
+defaults:
+  run:
+    shell: bash
+
+# Wait for any previous jobs to finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  # Download dependencies to build a project using a Composer lockfile.
+  composer-build:
+    name: 'Build: Composer dependencies.'
+    uses: thisisgain/.github/.github/workflows/01-build-composer.yml@main
+    with:
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
+
+  # Push the code to the remote repository.
+  push-code:
+    name: 'Deploy: push code to Pantheon.'
+    neds: [composer-build]
+    # Only push code to Pantheon if it's going to build a multidev.
+    if: contains(github.event.pull_request.labels.*.name, 'Build')
+    uses: thisisgain/.github/.github/workflows/03-deploy-pantheon.yml@main
+    with:
+      # The commit details should be an automation account, with a shared email;
+      # the SSH config in secrets use these credentials, and the user should be
+      # able to access the remote repo (eg add as a user).
+      git_name: GAIN Automation
+      git_email: geeks+client.gha@thisisgain.com
+      # Set the multidev_safe flag. This will create a shorter branch name that
+      # is safe to use as a multidev site name.
+      multidev_safe: true
+    # If the repository is in the GAIN GitHub, you can use this shortcut to pass
+    # all secrets through without needing to define them.
+    secrets: inherit
+
+  # Create the multidev site on Pantheon.
+  create-multidev:
+    name: 'Deploy: create a Pantheon multidev site.'
+    needs: [push-code]
+    # The label is "Build". It may need to be created in the repository.
+    if: contains(github.event.pull_request.labels.*.name, 'Build')
+    uses: thisisgain/.github/.github/workflows/00-pantheon-create-multidev.yml@main
+    with:
+      pantheon_machine_name: 'project_name'
+    secrets: inherit

@@ -1,38 +1,42 @@
+# Name: Build an application using Composer.
+# Type: Build task.
+# Use: Using the root composer.lock file, build an application.
+
 name: Build and validate Composer.
 
 on:
   workflow_call:
     inputs:
       directory:
-        description: 'The directory in which to run commands'
+        description: 'The directory in which to run commands.'
         type: string
         default: './'
       container:
-        description: 'The docker image to use'
+        description: 'The Docker image to use.'
         type: string
         required: true
       source_key:
-        description: 'The source cache key suffix, or empty to checkout'
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
       target_key:
-        description: 'The target cache key suffix, or empty to throw away'
+        description: 'The target cache key suffix, or empty to throw away.'
         type: string
         default: 'composer'
       ssh_config:
-        description: 'Indicate we need to run SSH configuration for asset access'
+        description: 'Whether to run SSH configuration for asset access.'
         type: boolean
         default: false
       composer_options:
-        description: 'Additional options to pass to composer'
+        description: 'Additional options to pass to Composer.'
         type: string
         default: '-o --apcu-autoloader'
     secrets:
-      SSH_KEY:
-        description: 'Private SSH key for any authenticated assets'
+      REMOTE_SSH_KEY:
+        description: 'Private SSH key to retrieve any authenticated assets.'
       SSH_CONFIG:
-        description: 'SSH configuration'
+        description: 'SSH configuration. Can be an empty secret, or not included.'
       KNOWN_HOSTS:
-        description: 'SSH known hosts'
+        description: 'SSH known hosts. Set using `ssh-keyscan` command.'
 
 defaults:
   run:
@@ -44,13 +48,13 @@ jobs:
     runs-on: ubuntu-latest
     container: ${{ inputs.container }}
     steps:
-      - name: Disable git safe directories as we are in a container.
+      - name: Disable Git safe directories as we are in a container.
         run: git config --global --add safe.directory '*'
 
       - name: Set up the build cache.
         # Only run if we have a target build.
         if: inputs.target_key != ''
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         id: target-build
         with:
           path: ./*
@@ -64,7 +68,7 @@ jobs:
         if: |
           (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
           inputs.source_key != ''
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         id: restore-build
         with:
           path: ./*
@@ -87,18 +91,18 @@ jobs:
         if: |
           (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
           inputs.source_key == ''
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
-      - name: Get Composer Cache Directory
+      - name: Get Composer Cache Directory.
         # Skip if we already have a full build.
         if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true')
         run: |
           echo "ACTIONS_COMPOSER_CACHE_DIR=$(composer config cache-dir)" >> $GITHUB_ENV
 
-      - name: Preserve the composer cache.
+      - name: Preserve the Composer cache.
         # Skip if we already have a full build.
         if: (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true')
-        uses: actions/cache@v3
+        uses: actions/cache@v5
         with:
           path: ${{ env.ACTIONS_COMPOSER_CACHE_DIR }}
           enableCrossOsArchive: true
@@ -119,9 +123,9 @@ jobs:
         if: |
           (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
           inputs.ssh_config
-        uses: shimataro/ssh-key-action@v2.3.1
+        uses: shimataro/ssh-key-action@v2
         with:
-          key: ${{ secrets.SSH_KEY }}
+          key: ${{ secrets.REMOTE_SSH_KEY }}
           config: ${{ secrets.SSH_CONFIG }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
 

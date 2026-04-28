@@ -1,0 +1,95 @@
+# Name: Deploy code to Pantheon.
+# Type: Deploy.
+# Use: Push a branch to a Pantheon environment. If multidev_safe is set, a safe
+#      branch name will be created on Pantheon first, so that a multidev
+#      environment can be created.
+
+name: Push a build artifact to Pantheon.
+
+on:
+  workflow_call:
+    inputs:
+      git_name:
+        description: "The Git committer name. Can be hardcoded, or get the triggering user's name."
+        type: string
+        required: true
+      git_email:
+        description: "The Git committer email. Can be hardcoded, or get the triggering user's email."
+        type: string
+        required: true
+      multidev_safe:
+        description: 'Whether to generate a multi-dev safe branch name.'
+        type: boolean
+        default: false
+        required: false
+      strip_prefix:
+        description: 'Optionally, a prefix to strip.'
+        type: string
+        required: false
+      safe_prefix:
+        description: 'Optional single letter safe prefix.'
+        type: string
+        required: false
+        default: 't'
+    secrets:
+      REMOTE_REPO:
+        description: 'The remote repository URL.'
+        required: true
+      REMOTE_SSH_KEY:
+        description: 'Private SSH key authorised to push to the remote repository.'
+        required: true
+      SSH_CONFIG:
+        description: 'SSH configuration. Can be an empty secret, or not included.'
+      KNOWN_HOSTS:
+        description: 'SSH known hosts. Set using `ssh-keyscan` command. Required for remote repo.'
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  push-code:
+    name: 'Push branch to Pantheon'
+    runs-on: ubuntu-latest
+    env:
+      GIT_COMMITTER_NAME: ${{ inputs.git_name }}
+      GIT_COMMITTER_EMAIL: ${{ inputs.git_email }}
+      BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+      REMOTE_REPO: ${{ secrets.REMOTE_REPO }}
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v6
+        with:
+          # Use a substantial depth so Pantheon doesn't have orphans.
+          fetch-depth: 50
+
+      - name: Set up the SSH key and configuration.
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.REMOTE_SSH_KEY }}
+          config: ${{ secrets.SSH_CONFIG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      - name: Create multi-dev-safe branch name.
+        if: inputs.multidev_safe
+        id: safe_branch
+        uses: thisisgain/.github/.github/actions/pantheon-safe-branch@migration
+        with:
+          branch_name: ${{ env.BRANCH_NAME }}
+          strip_prefix: ${{ inputs.strip_prefix }}
+          safe_prefix: ${{ inputs.safe_prefix }}
+
+      - name: Prepare for deployment to Pantheon.
+        run: |
+          git config --global user.name $GIT_COMMITTER_NAME
+          git config --global user.email "$GIT_COMMITTER_EMAIL"
+          git config --global --add safe.directory $(realpath .)
+          git remote add pantheon $REMOTE_REPO
+
+      - name: Push the code to Pantheon.
+        env:
+          BRANCH_NAME: ${{ steps.safe_branch.outputs.branch_name || env.BRANCH_NAME }}
+        run: |
+          git push pantheon HEAD:refs/heads/$BRANCH_NAME -f
+          echo "⚡ $BRANCH_NAME pushed to Pantheon!" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,53 @@
+name: "Example workflow: Perform PHP tests on pull requests."
+
+on:
+  # When a pull request is opened, reopened (from closed), synchronized (with
+  # the main development branch), or a label is added, run this workflow.
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+
+defaults:
+  run:
+    shell: bash
+
+# Cancel out of date jobs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Download dependencies to build a project using a Composer lockfile.
+  composer-build:
+    name: 'Composer: build project.'
+    uses: thisisgain/.github/.github/workflows/01-build-composer.yml@main
+    with:
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
+
+  # Run Composer security scans to check for any vulnerabilities.
+  composer-security:
+    name: 'Composer: run security checks.'
+    needs: [composer-build]
+    uses: thisisgain/.github/.github/workflows/02-test-composer-security.yml@main
+    with:
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
+
+  # Run PHP static analysis on changes in the code.
+  php-analysis:
+    name: 'PHP: run static analysis.'
+    needs: [composer-build]
+    uses: thisisgain/.github/.github/workflows/02-test-php-analysis.yml@main
+    with:
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20
+      phpstan: true
+
+  # Run all PHPUnit tests.
+  phpunit:
+    name: 'PHP: run PHPUnit tests.'
+    needs: [composer-build]
+    uses: thisisgain/.github/.github/workflows/02-test-php-phpunit.yml@main
+    with:
+      container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.2-cli-n20

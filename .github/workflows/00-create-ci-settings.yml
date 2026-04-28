@@ -1,0 +1,101 @@
+# Name: Create settings file for CI jobs.
+# Type: Helper.
+# Use: Create a settings file to use in automated tests.
+
+name: Create continuous integration settings.
+
+on:
+  workflow_call:
+    inputs:
+      container:
+        description: 'The Docker image to use.'
+        type: string
+        required: true
+      source_key:
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
+        type: string
+        default: 'composer'
+      target_key:
+        description: 'The target cache key suffix, or empty to throw away.'
+        type: string
+        default: 'settings'
+      docroot:
+        description: 'The docroot where Drupal is installed.'
+        type: string
+        default: 'docroot'
+    secrets:
+      ACQUIA_ENVIRONMENT_ID:
+        description: 'Acquia environment ID.'
+        required: true
+      ACLI_CLIENT_ID:
+        description: 'The client ID for authenticating with ACLI.'
+        required: true
+      ACLI_CLIENT_SECRET:
+        description: 'The client secret for authenticating with ACLI.'
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  settings-build:
+    name: 'Add CI settings'
+    runs-on: ubuntu-latest
+    container: ${{ inputs.container }}
+    steps:
+      - name: Set up the build cache.
+        # Only run if we have a target build.
+        if: inputs.target_key != ''
+        uses: actions/cache@v5
+        id: target-build
+        with:
+          path: ./*
+          enableCrossOsArchive: true
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.target_key }}
+
+      - name: Restore build from a previous step.
+        # Skip if we already have a full build.
+        # Only restore if we have a source key.
+        if: |
+          (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.source_key != ''
+        uses: actions/cache@v5
+        id: restore-build
+        with:
+          path: ./*
+          enableCrossOsArchive: true
+          # We are only interested in a direct hit.
+          key: build-${{ github.sha }}-${{ inputs.source_key }}
+
+      - name: Abort if we have a source build cache miss.
+        run: exit 1
+        # Skip if we already have a full build.
+        # Only if we have a source key.
+        if: |
+          (inputs.target_key == '' || steps.target-build.outputs.cache-hit != 'true') &&
+          inputs.source_key != '' &&
+          steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Set up OAuth keys.
+        # Skip if we already have a full build.
+        if: steps.target-build.outputs.cache-hit != 'true'
+        run: |
+          mkdir oauth_keys
+          openssl genrsa -out oauth_keys/private.key 4096
+          openssl rsa -in oauth_keys/private.key -pubout > oauth_keys/public.key
+          chmod 0600 ./oauth_keys/*
+
+      - name: Copy the settings file into place.
+        # Skip if we already have a full build.
+        if: steps.target-build.outputs.cache-hit != 'true'
+        env:
+          CI_LOCAL_SETTINGS: ${{ secrets.CI_LOCAL_SETTINGS }}
+        run: |
+          echo "$CI_LOCAL_SETTINGS" > ${{ inputs.docroot }}/sites/default/settings/local.settings.php
+
+      - name: Check & debug the status and db connection.
+        run: |
+          ./vendor/bin/drush status
+          ./vendor/bin/drush sql-connect

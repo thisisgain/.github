@@ -1,0 +1,124 @@
+# Name: Deploy to Acquia using ACLI.
+# Type: Deploy.
+# Use: Use ACLI to push an artifact to Acquia.
+
+name: Push an artifact to Acquia using ACLI.
+
+on:
+  workflow_call:
+    inputs:
+      git_name:
+        description: "The Git committer name. Can be hardcoded, or get the triggering user's name."
+        type: string
+        required: true
+      git_email:
+        description: "The Git committer email. Can be hardcoded, or get the triggering user's email."
+        type: string
+        required: true
+      target_branch:
+        description: 'For tag deployments, set the branch to push to alongside the tag.'
+        type: string
+        required: false
+      php_version:
+        description: 'Optionally, specify a PHP version to install. Default: 8.2.'
+        type: string
+        required: false
+        default: '8.2'
+      directory:
+        description: 'Optionally, the directory to check for git diffs.'
+        type: string
+        required: false
+        default: './'
+    secrets:
+      REMOTE_REPO:
+        description: 'The remote repository URL.'
+        required: true
+      REMOTE_SSH_KEY:
+        description: 'Private SSH key authorised to push to the remote repository.'
+        required: true
+      SSH_CONFIG:
+        description: 'SSH configuration. Can be an empty secret, or not included.'
+      KNOWN_HOSTS:
+        description: 'SSH known hosts. Set using `ssh-keyscan` command. Required for remote repo.'
+        required: true
+      ACLI_CLIENT_ID:
+        description: 'The client ID for authenticating with ACLI.'
+        required: true
+      ACLI_CLIENT_SECRET:
+        description: 'The client secret for authenticating with ACLI.'
+        required: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  push-code:
+    name: 'Push code to Acquia using ACLI'
+    runs-on: ubuntu-latest
+    env:
+      GIT_COMMITTER_NAME: ${{ inputs.git_name }}
+      GIT_COMMITTER_EMAIL: ${{ inputs.git_email }}
+      TARGET_BRANCH: ${{ inputs.target_branch }}
+      # Gets the branch name (if a pull request), or the branch/tag that
+      # triggered the run (if not).
+      SOURCE_REF: ${{ github.head_ref || github.ref_name }}
+    steps:
+      # ACLI push:artifact builds a whole artifact. Checkout the clean branch.
+      - name: Check out the code
+        uses: actions/checkout@v6
+
+      - name: Install PHP
+        uses: shivammathur/setup-php@master
+        with:
+          php-version: ${{ inputs.php_version }}
+
+      - name: Install ACLI
+        run: |
+          curl -OL https://github.com/acquia/cli/releases/latest/download/acli.phar
+          chmod +x acli.phar && sudo mv acli.phar /usr/local/bin/acli
+
+      - name: Set up the SSH key and configuration.
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.REMOTE_SSH_KEY }}
+          config: ${{ secrets.SSH_CONFIG }}
+          known_hosts: ${{ secrets.KNOWN_HOSTS }}
+
+      - name: Authorise with ACLI
+        run: |
+          acli auth:login -n \
+            --key ${{ secrets.ACLI_CLIENT_ID }} \
+            --secret ${{ secrets.ACLI_CLIENT_SECRET }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name $GIT_COMMITTER_NAME
+          git config --global user.email "$GIT_COMMITTER_EMAIL"
+          git config --global --add safe.directory $(realpath .)
+
+      - name: Deploy branch to Acquia
+        # Check the fully-qualified ref here, instead of the environment var.
+        if: |
+          startsWith(github.ref, 'refs/heads/') ||
+          startsWith(github.ref, 'refs/pull/')
+        run: |
+          echo "Pushing to $SOURCE_REF"
+          acli push:artifact -n \
+            --destination-git-urls ${{ secrets.REMOTE_REPO }} \
+            --destination-git-branch $SOURCE_REF
+          echo ":droplet: Branch $SOURCE_REF pushed to Acquia!" >> $GITHUB_STEP_SUMMARY
+
+      - name: Deploy tag to Acquia
+        # Only deploy tags if there is a corresponding target branch.
+        # Check the fully-qualified ref here, instead of the environment var.
+        if: |
+          startsWith(github.ref, 'refs/tags/') &&
+          inputs.target_branch != ''
+        run: |
+          echo "Pushing to $SOURCE_REF"
+          acli push:artifact -n \
+            --destination-git-urls ${{ secrets.REMOTE_REPO }} \
+            --destination-git-branch $TARGET_BRANCH \
+            --destination-git-tag $SOURCE_REF
+          echo ":droplet: Tag $SOURCE_REF pushed to Acquia!" >> $GITHUB_STEP_SUMMARY
