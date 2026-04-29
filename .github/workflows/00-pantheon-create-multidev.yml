@@ -44,7 +44,7 @@ jobs:
 
       - name: Create multidev-safe branch name
         id: safe_branch
-        uses: thisisgain/.github/.github/actions/pantheon-safe-branch@migration
+        uses: thisisgain/.github/.github/actions/pantheon-safe-branch@main
         with:
           branch_name: ${{ github.head_ref }}
           strip_prefix: ${{ inputs.strip_prefix }}
