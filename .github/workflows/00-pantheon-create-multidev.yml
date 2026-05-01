@@ -60,7 +60,21 @@ jobs:
         with:
           pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}
 
-      - name: Create or update a multidev environment.
+      - name: Check for existing multidev.
+        id: check_existing
+        run: |
+          # Get the multidev list and grep for the branch name passed in.
+          multidev_list=$(terminus multidev:list \
+            --no-interaction \
+            --format=list \
+            -- $PANTHEON_MACHINE_NAME \
+            | grep ${{ steps.safe_branch.outputs.branch_name }}
+          # Provide the list to the Github output.
+          echo ${multidev_list} >> ${GITHUB_OUTPUT}
+
+      - name: Create a multidev environment.
+        # Only create the environment if it doesn't already exist.
+        if: steps.check_existing.outputs.multidev_list == ''
         env:
           PANTHEON_SITE_URL: "pantheonsite.io"
         run: |
@@ -69,4 +83,11 @@ jobs:
             --no-files \
             --no-interaction
           echo "⚡ Multidev site created!" >> $GITHUB_STEP_SUMMARY
+          echo "You can access it at: https://${{ steps.safe_branch.outputs.branch_name }}-$PANTHEON_MACHINE_NAME.$PANTHEON_SITE_URL" >> $GITHUB_STEP_SUMMARY
+
+      - name: Provide the multidev environment URL.
+        # If a multidev environment already exists, list it.
+        if: steps.check_existing.outputs.multidev_list != ''
+        run: |
+          echo "⚡ Multidev site already exists! It's being updated." >> $GITHUB_STEP_SUMMARY
           echo "You can access it at: https://${{ steps.safe_branch.outputs.branch_name }}-$PANTHEON_MACHINE_NAME.$PANTHEON_SITE_URL" >> $GITHUB_STEP_SUMMARY
