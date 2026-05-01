@@ -68,7 +68,7 @@ jobs:
             --no-interaction \
             --format=list \
             -- $PANTHEON_MACHINE_NAME \
-            | grep ${{ steps.safe_branch.outputs.branch_name }}
+            | grep ${{ steps.safe_branch.outputs.branch_name }})
           # Provide the list to the Github output.
           echo ${multidev_list} >> ${GITHUB_OUTPUT}
 
