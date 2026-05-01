@@ -74,6 +74,9 @@ jobs:
 
       - name: Check whether multidev exists.
         id: check_existing
+        # Terminus returns an error/warning if there are no multidevs at all;
+        # this shouldn't stop the build from continuing.
+        continue-on-error: true
         run: |
           # Get the multidev list and grep for the branch name passed in.
           multidev_list=$(terminus multidev:list \
