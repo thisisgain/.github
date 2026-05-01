@@ -86,7 +86,10 @@ jobs:
             | grep ${{ steps.safe_branch.outputs.branch_name }})
 
           # Provide the list to the Github output.
-          echo "${multidev_list}" >> "$GITHUB_OUTPUT"
+          delimiter="$(openssl rand -hex 8)"
+          echo "multidev_list<<${delimiter}" >> "${GITHUB_OUTPUT}"
+          echo ${multidev_list} >> ${GITHUB_OUTPUT}
+          echo "${delimiter}" >> "${GITHUB_OUTPUT}"
 
       - name: Delete a multidev environment.
         # If there was a multidev environment, delete it, and the branch.

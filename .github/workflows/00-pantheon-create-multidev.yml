@@ -73,10 +73,11 @@ jobs:
             -- $PANTHEON_MACHINE_NAME \
             | grep ${{ steps.safe_branch.outputs.branch_name }})
 
-          echo "${multidev_list}"
-
           # Provide the list to the Github output.
-          echo "${multidev_list}" >> "$GITHUB_OUTPUT"
+          delimiter="$(openssl rand -hex 8)"
+          echo "multidev_list<<${delimiter}" >> "${GITHUB_OUTPUT}"
+          echo ${multidev_list} >> ${GITHUB_OUTPUT}
+          echo "${delimiter}" >> "${GITHUB_OUTPUT}"
 
       - name: Create a multidev environment.
         # Only create the environment if it doesn't already exist.
