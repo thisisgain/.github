@@ -108,7 +108,7 @@ jobs:
         if: steps.check_existing.outputs.multidev_list == ''
         run: |
           git config --global --add safe.directory $(realpath .)
-          git remote add pantheon $REMOTE_REPO
+          git remote add pantheon ${{ secrets.REMOTE_REPO }}
 
       - name: Delete the branch from Pantheon.
         # If there was no multidev, delete the remote branch only.
