@@ -69,7 +69,7 @@ jobs:
       - name: Fetch the remote branches
         if: ${{ inputs.push_to_remote }}
         run: |
-          git remote add target ${{ secrets.push_to_remote }}
+          git remote add target ${{ secrets.REMOTE_REPO }}
           git fetch target
 
       - name: Checkout the target branch, creating if necessary
