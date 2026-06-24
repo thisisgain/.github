@@ -36,6 +36,7 @@ jobs:
     env:
       BRANCH_NAME: ${{ github.head_ref }}
       PANTHEON_MACHINE_NAME: ${{ inputs.pantheon_machine_name }}
+      PANTHEON_SITE_URL: "pantheonsite.io"
     steps:
       # It's safe to use a checkout here, instead of the cached build, just to
       # get access to the script.
@@ -82,8 +83,6 @@ jobs:
       - name: Create a multidev environment.
         # Only create the environment if it doesn't already exist.
         if: steps.check_existing.outputs.multidev_list == ''
-        env:
-          PANTHEON_SITE_URL: "pantheonsite.io"
         run: |
           terminus multidev:create \
             $PANTHEON_MACHINE_NAME.dev ${{ steps.safe_branch.outputs.branch_name }} \
