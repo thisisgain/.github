@@ -51,8 +51,9 @@ jobs:
       # The commit details should be an automation account, with a shared email;
       # the SSH config in secrets use these credentials, and the user should be
       # able to access the remote repo (eg add as a user).
-      git_name: GAIN Automation
-      git_email: geeks+client.gha@thisisgain.com
+      # Git user details, including SSH keys, should be stored in Keeper.
+      git_name: ${{ vars.git_name }}
+      git_email: ${{ vars.git_email }}
       # Set the multidev_safe flag. This will create a shorter branch name that
       # is safe to use as a multidev site name.
       multidev_safe: true

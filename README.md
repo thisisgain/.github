@@ -23,7 +23,9 @@ starting point for building your own GitHub Actions workflows.
     - [Adding jobs to a workflow](#adding-jobs-to-a-workflow)
     - [Choosing which jobs to add](#choosing-which-jobs-to-add)
     - [Running a workflow](#running-a-workflow)
-  - [Secrets in jobs](#secrets-in-jobs)
+  - [Secrets and variables in jobs](#secrets-and-variables-in-jobs)
+    - [Secrets](#secrets)
+    - [Variables](#variables)
   - [Customising jobs](#customising-jobs)
   - [Further reading](#further-reading)
 
@@ -217,14 +219,55 @@ trigger a workflow from the Actions page in the repository. Be careful with
 this: if any jobs within the workflow use references that only exist on a
 pull request, the workflow will fail to run.
 
-## Secrets in jobs
+## Secrets and variables in jobs
 
-Some workflows require secrets to be added to your GitHub repository. You need
-to be a repo admin to be able to set up these keys.
+Some workflows require variables or secrets to be added to your GitHub
+repository. You need to be a repo admin to be able to set up these values.
 
-Go to Settings > Secrets and variables > Actions to set the variables. They
-should be added as Repository secrets. The workflow includes the variable name
-but the value will differ.
+Go to Settings > Secrets and variables > Actions to set these values. They
+should be added as Repository values/secrets. The workflow includes the variable
+name but the value will differ.
+
+There are two types of variables you can add:
+
+* **Variable**: non-sensitive values. These are more visible during workflow
+  runs, so it's a little easier to see/debug them. For example, Github user
+  details, or the remote repository URL.
+* **Secret**: sensitive values that should not be exposed/visible during runs.
+  These won't ever be printed or displayed during workflow runs. For example,
+  SSH keys or access tokens.
+
+You can always be defensive and use secrets for all values, but **never**
+downgrade sensitive data to a variable instead of a secret. Decide whether the
+value should be a secret or variable by checking the workflow you're planning
+to use [in the `workflows` directory](./workflows).
+
+### Secrets
+
+Check the workflow and look for a section at the top of the file:
+
+```yml
+on:
+  workflow_call:
+    secrets:
+      ACQUIA_ENVIRONMENT_ID:
+        description: 'Acquia environment ID.'
+        required: true
+```
+
+This means that when calling the workflow you will meed to define the secrets
+listed:
+
+```yml
+jobs:
+  backup-databases:
+    name: 'Task: Backup production databases'
+    uses: thisisgain/.github/.github/workflows/00-acquia-backup-databases.yml@main
+    secrets:
+      ACQUIA_ENVIRONMENT_ID: ${{ secrets.ACQUIA_ENVIRONMENT_ID }}
+```
+
+Secrets are referenced in the workflow as `${{ secrets.NAME }}`.
 
 | Name                     | Description |
 | ------------------------ | ----------- |
@@ -235,7 +278,7 @@ but the value will differ.
 | **Remote repository**                  |
 | `REMOTE_REPO`            | The URL of the remote/target repository, where the work should be deployed to. |
 | `REMOTE_SSH_KEY`         | A private SSH key authorised to push to the remote repository. |
-| `GITHUB_ACCESS_TOKEN`      | A GitHub access token authorised to interact with a remote repository. Normally, pass in `${{ secrets.GITHUB_TOKEN }}``. |
+| `GITHUB_ACCESS_TOKEN`      | A GitHub access token authorised to interact with a remote repository. Unless otherwise specified, use the Github-created secret `${{ secrets.GITHUB_TOKEN }}``. |
 | **Hosting specific: Acquia**           |
 | `ACQUIA_ENVIRONMENT_ID`  | The Acquia environment ID. |
 | `ACLI_CLIENT_ID`         | A client ID for authenticating with Acquia CLI. |
@@ -244,27 +287,39 @@ but the value will differ.
 | `PANTHEON_MACHINE_NAME`  | The machine name for the Pantheon project. |
 | `PANTHEON_MACHINE_TOKEN` | A machine token authorised to interact with the Pantheon project via Terminus. |
 
-Some workflows may need additional configuration to be set during runtime. If an
-input variable is marked as a secret, it will come from the Github secrets.
-Secret values should not be used to populate regular inputs. See the individual
-workflows to find out what input variables are available for customising the
-build:
+### Variables
+
+If the variable is listed under the `inputs` section:
 
 ```yml
-deploy:
-  name: 'Deploy: push code to remote environment.'
-  uses: thisisgain/.github/.github/workflows/03-deploy-git-update.yml@main
-  with:
-    target_branch: ${{ inputs.target_branch }}
-    push_to_remote: true
-    git_name: ${{ github.event.sender.login }}
-    git_email: ${{ github.event.sender.id }}+${{ github.event.sender.login }}@users.noreply.github.com
-  secrets:
-    REMOTE_REPO: ${{ secrets.REMOTE_REPO }}
-    REMOTE_SSH_KEY: ${{ secrets.REMOTE_SSH_KEY }}
-    SSH_CONFIG: ${{ secrets.SSH_CONFIG }}
-    KNOWN_HOSTS: ${{ secrets.KNOWN_HOSTS }}
+on:
+  workflow_call:
+    inputs:
+      git_name:
+        description: "The Git committer name. Can be hardcoded, or get the triggering user's name."
+        type: string
+        required: true
 ```
+
+This is a candidate for setting a variable, particularly if it will be reused
+across multiple workflows. Inputs can be passed in when calling the workflow:
+
+```yml
+jobs:
+  push-code:
+    name: 'Deploy: push artifact to repository.'
+    uses: thisisgain/.github/.github/workflows/03-deploy-artifact.yml@main
+    with:
+      git_name: ${{ vars.GIT_NAME }}
+```
+
+Variables are referenced in the workflow as `${{ vars.NAME }}`.
+
+| Name                     | Description |
+| ------------------------ | ----------- |
+| **General**                            |
+| `GIT_USER`             | The username for the user making the automated commits. Usually `GAIN Automation`. |
+| `GIT_EMAIL`            | The password for the user making the automated commits. Usually `geeks+CLIENT.gha@thisisgain.com`. |
 
 ## Customising jobs
 

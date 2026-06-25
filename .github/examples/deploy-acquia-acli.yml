@@ -30,8 +30,9 @@ jobs:
       # The commit details should be an automation account, with a shared email;
       # the SSH config in secrets use these credentials, and the user should be
       # able to access the remote repo (eg add as a user).
-      git_name: GAIN Automation
-      git_email: geeks+client.gha@thisisgain.com
+      # Git user details, including SSH keys, should be stored in Keeper.
+      git_name: ${{ vars.git_name }}
+      git_email: ${{ vars.git_email }}
       # The target branch is used for deploying a tag: ACLI requires a push to a
       # branch at the same time. The branch name is automatically detected if
       # this is triggered by a push to a branch.
