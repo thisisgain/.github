@@ -7,18 +7,38 @@ name: Run automated PHPUnit tests.
 on:
   workflow_call:
     inputs:
-      directory:
-        description: 'The directory in which to run commands.'
-        type: string
-        default: './'
       container:
         description: 'The Docker image to use.'
         type: string
         required: true
+      db_image:
+        description: 'A Docker database image, eg mysql:5.7 or mariadb:10.3. Default: mysql:5.7.'
+        type: string
+        default: 'mysql:5.7'
+      db_user:
+        description: 'The database username. Default: db.'
+        type: string
+        default: 'db'
+      db_pass:
+        description: 'The database password. Default: db.'
+        type: string
+        default: 'db'
+      db_name:
+        description: 'The database name. Default: db.'
+        type: string
+        default: 'db'
+      db_root_pass:
+        description: 'The database root password. Default: root.'
+        type: string
+        default: 'root'
       source_key:
         description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
         default: 'composer'
+      directory:
+        description: 'The directory in which to run commands.'
+        type: string
+        default: './'
 
 defaults:
   run:
@@ -31,13 +51,13 @@ jobs:
     container: ${{ inputs.container }}
     services:
       db:
-        image: mysql:5.7
+        image: ${{ inputs.db_image }}
         ports: [ 3306 ]
         env:
-          MYSQL_USER: db
-          MYSQL_PASSWORD: db
-          MYSQL_DATABASE: db
-          MYSQL_ROOT_PASSWORD: root
+          MYSQL_USER: ${{ inputs.db_user }}
+          MYSQL_PASSWORD: ${{ inputs.db_pass }}
+          MYSQL_DATABASE: ${{ inputs.db_name }}
+          MYSQL_ROOT_PASSWORD: ${{ inputs.db_root_pass }}
         options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
     steps:
       - name: Restore build from a previous step.
@@ -51,6 +71,9 @@ jobs:
       - name: Abort if we have a source build cache miss.
         run: exit 1
         if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Abort if PHPUnit isn't installed.
+        run: test -f ./vendor/bin/phpunit || exit 1
 
       - name: Start the PHP server.
         run: |

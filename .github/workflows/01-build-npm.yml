@@ -7,17 +7,10 @@ name: Build and validate an NPM package.
 on:
   workflow_call:
     inputs:
-      directory:
-        description: 'The directory in which to run commands.'
-        type: string
-        required: true
       container:
         description: 'The Docker image to use.'
         type: string
         required: true
-      source_key:
-        description: 'The source cache key suffix, or empty to perform a clean checkout.'
-        type: string
       target_key:
         description: 'The target cache key suffix, or empty to throw away.'
         type: string
@@ -26,14 +19,17 @@ on:
         description: 'The target path for the cache.'
         type: string
         default: './*'
-      target_modules:
-        description: 'Whether to keep the `node_modules` directory from the target build.'
-        type: boolean
-        default: true
+      source_key:
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
+        type: string
       ssh_config:
         description: 'Whether to run SSH configuration for asset access.'
         type: boolean
         default: false
+      directory:
+        description: 'The directory in which to run commands.'
+        type: string
+        required: true
       run_build:
         description: 'Whether to run `npm run build`.'
         type: boolean
@@ -46,6 +42,10 @@ on:
         description: 'Whether to run `npm run test`.'
         type: boolean
         default: false
+      target_modules:
+        description: 'Whether to keep the `node_modules` directory from the target build.'
+        type: boolean
+        default: true
     secrets:
       REMOTE_SSH_KEY:
         description: 'Private SSH key to retrieve any authenticated assets.'

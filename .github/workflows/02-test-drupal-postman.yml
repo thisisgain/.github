@@ -12,33 +12,33 @@ on:
         type: string
         required: true
       db_image:
-        description: 'The database Docker image to use.'
+        description: 'A Docker database image, eg mysql:5.7 or mariadb:10.3. Default: mysql:5.7.'
         type: string
         default: 'mysql:5.7'
       db_user:
-        description: 'The database username.'
+        description: 'The database username. Default: db.'
         type: string
         default: 'db'
       db_pass:
-        description: 'The database password.'
+        description: 'The database password. Default: db.'
         type: string
         default: 'db'
       db_name:
-        description: 'The database name.'
+        description: 'The database name. Default: db.'
         type: string
         default: 'db'
       db_root_pass:
-        description: 'The database root password.'
+        description: 'The database root password. Default: root.'
         type: string
         default: 'root'
-      source_key:
-        description: 'The source cache key suffix, or empty to perform a clean checkout.'
-        type: string
-        default: 'composer'
       source_path:
         description: 'The path of the source cache.'
         type: string
         default: ./*
+      source_key:
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
+        type: string
+        default: 'composer'
       docroot:
         description: 'The docroot where Drupal is installed.'
         type: string

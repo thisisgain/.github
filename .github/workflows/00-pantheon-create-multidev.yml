@@ -20,6 +20,11 @@ on:
         type: string
         required: false
         default: 't'
+      php_version:
+        description: 'Optionally, specify a PHP version to install. Default: 8.3.'
+        type: string
+        required: false
+        default: '8.3'
     secrets:
       PANTHEON_MACHINE_TOKEN:
         description: 'Machine token authorised to the Pantheon site.'
@@ -51,12 +56,12 @@ jobs:
           strip_prefix: ${{ inputs.strip_prefix }}
           safe_prefix: ${{ inputs.safe_prefix }}
 
-      - name: Install PHP
+      - name: Install PHP.
         uses: shivammathur/setup-php@master
         with:
-          php-version: '8.2'
+          php-version: ${{ inputs.php_version }}
 
-      - name: Install Terminus
+      - name: Install Terminus.
         uses: pantheon-systems/terminus-github-actions@v1
         with:
           pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}

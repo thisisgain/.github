@@ -72,8 +72,12 @@ jobs:
     uses: thisisgain/.github/.github/workflows/03-deploy-artifact.yml@main
     with:
       container: registry.gitlab.com/freelygive/docker/drupal-php-node:p8.3-cli-n20
-      git_name: GAIN Automation
-      git_email: geeks+client.gha@thisisgain.com
+      # The commit details should be an automation account, with a shared email;
+      # the SSH config in secrets use these credentials, and the user should be
+      # able to access the remote repo (eg add as a user).
+      # Git user details, including SSH keys, should be stored in Keeper.
+      git_name: ${{ vars.git_name }}
+      git_email: ${{ vars.git_email }}
       source_key: composer
       add_files_defaults: false
       add_files: >-

@@ -20,19 +20,11 @@ on:
         type: string
         required: false
       php_version:
-        description: 'Optionally, specify a PHP version to install. Default: 8.2.'
+        description: 'Optionally, specify a PHP version to install. Default: 8.3.'
         type: string
         required: false
-        default: '8.2'
-      directory:
-        description: 'Optionally, the directory to check for git diffs.'
-        type: string
-        required: false
-        default: './'
+        default: '8.3'
     secrets:
-      REMOTE_REPO:
-        description: 'The remote repository URL.'
-        required: true
       REMOTE_SSH_KEY:
         description: 'Private SSH key authorised to push to the remote repository.'
         required: true
@@ -46,6 +38,9 @@ on:
         required: true
       ACLI_CLIENT_SECRET:
         description: 'The client secret for authenticating with ACLI.'
+        required: true
+      REMOTE_REPO:
+        description: 'The remote repository URL.'
         required: true
 
 defaults:

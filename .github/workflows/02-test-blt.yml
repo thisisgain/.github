@@ -16,6 +16,26 @@ on:
         description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
         default: 'composer'
+      db_image:
+        description: 'A Docker database image, eg mysql:5.7 or mariadb:10.3. Default: mysql:5.7.'
+        type: string
+        default: 'mysql:5.7'
+      db_user:
+        description: 'The database username. Default: db.'
+        type: string
+        default: 'db'
+      db_pass:
+        description: 'The database password. Default: db.'
+        type: string
+        default: 'db'
+      db_name:
+        description: 'The database name. Default: db.'
+        type: string
+        default: 'db'
+      db_root_pass:
+        description: 'The database root password. Default: root.'
+        type: string
+        default: 'root'
       copy_ci_settings:
         description: 'Whether to copy the settings.ci.php to settings.local.php.'
         type: boolean
@@ -58,13 +78,13 @@ jobs:
     container: ${{ inputs.container }}
     services:
       db:
-        image: mysql:5.7
+        image: ${{ inputs.db_image }}
         ports: [ 3306 ]
         env:
-          MYSQL_USER: db
-          MYSQL_PASSWORD: db
-          MYSQL_DATABASE: db
-          MYSQL_ROOT_PASSWORD: root
+          MYSQL_USER: ${{ inputs.db_user }}
+          MYSQL_PASSWORD: ${{ inputs.db_pass }}
+          MYSQL_DATABASE: ${{ inputs.db_name }}
+          MYSQL_ROOT_PASSWORD: ${{ inputs.db_root_pass }}
         options: --health-cmd="mysqladmin ping" --health-interval=5s --health-timeout=2s --health-retries=3
     steps:
       - name: Restore build from a previous step.

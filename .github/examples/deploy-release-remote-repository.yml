@@ -53,7 +53,9 @@ jobs:
     with:
       target_branch: ${{ inputs.target_branch }}
       push_to_remote: true
-      # The committer in this case is the user who triggered the workflow.
+      # When code is automatically pushed, we use a shared account to associate
+      # the commit/push with. In this case, because a person is triggering the
+      # build and push, the committer is the user who triggered the workflow.
       git_name: ${{ github.event.sender.login }}
       git_email: ${{ github.event.sender.id }}+${{ github.event.sender.login }}@users.noreply.github.com
     secrets:

@@ -8,10 +8,10 @@ name: Run PHP static analysis.
 on:
   workflow_call:
     inputs:
-      directory:
-        description: 'The directory in which to run commands.'
-        type: string
-        default: './'
+      phpcs:
+        description: 'Whether to run PHP Coding Standards checks.'
+        type: boolean
+        default: true
       container:
         description: 'The Docker image to use.'
         type: string
@@ -20,10 +20,10 @@ on:
         description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
         default: 'composer'
-      phpcs:
-        description: 'Whether to run PHP Coding Standards checks.'
-        type: boolean
-        default: true
+      directory:
+        description: 'The directory in which to run commands.'
+        type: string
+        default: './'
       phpstan:
         description: 'Whether to run PHPStan checks.'
         type: boolean
@@ -68,6 +68,9 @@ jobs:
         run: exit 1
         if: steps.restore-build.outputs.cache-hit != 'true'
 
+      - name: Abort if PHPCS isn't installed.
+        run: test -f ./vendor/bin/phpcs || exit 1
+
       - name: Run PHPCS.
         run: |
           cd ${{ inputs.directory }}
@@ -90,6 +93,9 @@ jobs:
       - name: Abort if we have a source build cache miss.
         run: exit 1
         if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Abort if PHPStan isn't installed.
+        run: test -f ./vendor/bin/phpstan || exit 1
 
       - name: Run PHPStan.
         run: |
@@ -114,6 +120,9 @@ jobs:
         run: exit 1
         if: steps.restore-build.outputs.cache-hit != 'true'
 
+      - name: Abort if GrumPHP isn't installed.
+        run: test -f ./vendor/bin/grumphp || exit 1
+
       - name: Run GrumPHP checks.
         run: |
           cd ${{ inputs.directory }}
@@ -136,6 +145,9 @@ jobs:
       - name: Abort if we have a source build cache miss.
         run: exit 1
         if: steps.restore-build.outputs.cache-hit != 'true'
+
+      - name: Abort if Drupal Check isn't installed.
+        run: test -f ./vendor/bin/drupal-check || exit 1
 
       - name: Run Drupal Check.
         run: |
