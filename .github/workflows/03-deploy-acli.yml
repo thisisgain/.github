@@ -20,10 +20,10 @@ on:
         type: string
         required: false
       php_version:
-        description: 'Optionally, specify a PHP version to install. Default: 8.2.'
+        description: 'Optionally, specify a PHP version to install. Default: 8.3.'
         type: string
         required: false
-        default: '8.2'
+        default: '8.3'
     secrets:
       REMOTE_SSH_KEY:
         description: 'Private SSH key authorised to push to the remote repository.'

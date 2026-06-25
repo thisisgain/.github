@@ -8,10 +8,10 @@ on:
   workflow_call:
     inputs:
       php_version:
-        description: 'Optionally, specify a PHP version to install. Default: 8.2.'
+        description: 'Optionally, specify a PHP version to install. Default: 8.3.'
         type: string
         required: false
-        default: '8.2'
+        default: '8.3'
       filter:
         description: 'Optionally, provide a filter for the databases. See: https://docs.acquia.com/acquia-cloud-platform/add-ons/acquia-cli/commands/api:applications:database-list'
         type: string

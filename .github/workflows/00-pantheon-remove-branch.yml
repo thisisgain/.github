@@ -22,10 +22,10 @@ on:
         required: false
         default: 't'
       php_version:
-        description: 'Optionally, specify a PHP version to install. Default: 8.2.'
+        description: 'Optionally, specify a PHP version to install. Default: 8.3.'
         type: string
         required: false
-        default: '8.2'
+        default: '8.3'
     secrets:
       PANTHEON_MACHINE_TOKEN:
         description: 'Machine token authorised to the Pantheon site.'
