@@ -52,6 +52,9 @@ jobs:
         run: exit 1
         if: steps.restore-build.outputs.cache-hit != 'true'
 
+      - name: Abort if PHPUnit isn't installed.
+        run: test -f ./vendor/bin/phpunit || exit 1
+
       - name: Start the PHP server.
         run: |
           cd ${{ inputs.directory }}
