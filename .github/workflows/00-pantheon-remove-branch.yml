@@ -22,19 +22,11 @@ on:
         required: false
         default: 't'
     secrets:
-      REMOTE_REPO:
-        description: 'The remote repository URL.'
-        required: true
-      REMOTE_SSH_KEY:
-        description: 'Private SSH key authorised to push to the remote repository.'
-        required: true
-      SSH_CONFIG:
-        description: 'SSH configuration. Can be an empty secret, or not included.'
-      KNOWN_HOSTS:
-        description: 'SSH known hosts. Set using `ssh-keyscan` command.'
-        required: true
       PANTHEON_MACHINE_TOKEN:
         description: 'Machine token authorised to the Pantheon site.'
+        required: true
+      REMOTE_REPO:
+        description: 'The remote repository URL.'
         required: true
 
 defaults:
@@ -62,7 +54,7 @@ jobs:
           strip_prefix: ${{ inputs.strip_prefix }}
           safe_prefix: ${{ inputs.safe_prefix }}
 
-      - name: Installing PHP
+      - name: Install PHP.
         uses: shivammathur/setup-php@master
         with:
           php-version: '8.2'
@@ -91,7 +83,7 @@ jobs:
           echo ${multidev_list} >> ${GITHUB_OUTPUT}
           echo "${delimiter}" >> "${GITHUB_OUTPUT}"
 
-      - name: Delete a multidev environment.
+      - name: Delete the multidev environment.
         # If there was a multidev environment, delete it, and the branch.
         if: steps.check_existing.outputs.multidev_list != ''
         continue-on-error: true

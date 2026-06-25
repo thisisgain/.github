@@ -51,12 +51,12 @@ jobs:
           strip_prefix: ${{ inputs.strip_prefix }}
           safe_prefix: ${{ inputs.safe_prefix }}
 
-      - name: Install PHP
+      - name: Install PHP.
         uses: shivammathur/setup-php@master
         with:
           php-version: '8.2'
 
-      - name: Install Terminus
+      - name: Install Terminus.
         uses: pantheon-systems/terminus-github-actions@v1
         with:
           pantheon-machine-token: ${{ secrets.PANTHEON_MACHINE_TOKEN }}

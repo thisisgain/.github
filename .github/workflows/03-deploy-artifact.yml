@@ -23,20 +23,6 @@ on:
       source_key:
         description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
-      add_files:
-        description: 'The files/directories to commit, bypassing .gitignore.'
-        type: string
-      add_files_defaults:
-        description: 'Whether to commit the default set of files (vendor and docroot).'
-        type: boolean
-        default: true
-      remove_files:
-        description: 'The files/directories to remove from deployment.'
-        type: string
-      remove_files_defaults:
-        description: 'Whether to remove the default set of files (DDEV, Github and patch directories, plus some Drupal Core files).'
-        type: boolean
-        default: true
       directory:
         description: 'The directory in which to run commands.'
         type: string
@@ -45,9 +31,23 @@ on:
         description: 'Additional options to pass to Composer.'
         type: string
         default: '-o --apcu-autoloader'
+      add_files_defaults:
+        description: 'Whether to commit the default set of files (vendor and docroot).'
+        type: boolean
+        default: true
+      add_files:
+        description: 'The files/directories to commit, bypassing .gitignore.'
+        type: string
+      remove_files_defaults:
+        description: 'Whether to remove the default set of files (DDEV, Github and patch directories, plus some Drupal Core files).'
+        type: boolean
+        default: true
+      remove_files:
+        description: 'The files/directories to remove from deployment.'
+        type: string
     secrets:
-      REMOTE_REPO:
-        description: 'The remote repository URL.'
+      GITHUB_ACCESS_TOKEN:
+        description: 'The read access token for Github, required for the unshallow fetch.'
         required: true
       REMOTE_SSH_KEY:
         description: 'Private SSH key authorised to push to the remote repository.'
@@ -57,8 +57,8 @@ on:
       KNOWN_HOSTS:
         description: 'SSH known hosts. Set using `ssh-keyscan` command.'
         required: true
-      GITHUB_ACCESS_TOKEN:
-        description: 'The read access token for Github, required for the unshallow fetch.'
+      REMOTE_REPO:
+        description: 'The remote repository URL.'
         required: true
 
 defaults:

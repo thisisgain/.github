@@ -8,10 +8,10 @@ name: Run PHP static analysis.
 on:
   workflow_call:
     inputs:
-      directory:
-        description: 'The directory in which to run commands.'
-        type: string
-        default: './'
+      phpcs:
+        description: 'Whether to run PHP Coding Standards checks.'
+        type: boolean
+        default: true
       container:
         description: 'The Docker image to use.'
         type: string
@@ -20,10 +20,10 @@ on:
         description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
         default: 'composer'
-      phpcs:
-        description: 'Whether to run PHP Coding Standards checks.'
-        type: boolean
-        default: true
+      directory:
+        description: 'The directory in which to run commands.'
+        type: string
+        default: './'
       phpstan:
         description: 'Whether to run PHPStan checks.'
         type: boolean

@@ -31,22 +31,22 @@ on:
         description: 'The database root password.'
         type: string
         default: 'root'
-      source_key:
-        description: 'The source cache key suffix, or empty to perform a clean checkout.'
-        type: string
-        default: 'composer'
       source_path:
         description: 'The path of the source cache.'
         type: string
         default: ./*
-      docroot:
-        description: 'The docroot where Drupal is installed.'
+      source_key:
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
         type: string
-        default: 'docroot'
+        default: 'composer'
       base_url:
         description: 'The non-prefixed local base URL, eg website.ddev.site.'
         type: string
         required: true
+      docroot:
+        description: 'The docroot where Drupal is installed.'
+        type: string
+        default: 'docroot'
 
 defaults:
   run:

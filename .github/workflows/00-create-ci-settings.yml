@@ -11,28 +11,18 @@ on:
         description: 'The Docker image to use.'
         type: string
         required: true
-      source_key:
-        description: 'The source cache key suffix, or empty to perform a clean checkout.'
-        type: string
-        default: 'composer'
       target_key:
         description: 'The target cache key suffix, or empty to throw away.'
         type: string
         default: 'settings'
+      source_key:
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
+        type: string
+        default: 'composer'
       docroot:
         description: 'The docroot where Drupal is installed.'
         type: string
         default: 'docroot'
-    secrets:
-      ACQUIA_ENVIRONMENT_ID:
-        description: 'Acquia environment ID.'
-        required: true
-      ACLI_CLIENT_ID:
-        description: 'The client ID for authenticating with ACLI.'
-        required: true
-      ACLI_CLIENT_SECRET:
-        description: 'The client secret for authenticating with ACLI.'
-        required: true
 
 defaults:
   run:

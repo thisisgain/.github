@@ -12,9 +12,6 @@ on:
         type: string
         required: false
     secrets:
-      REMOTE_REPO:
-        description: 'The remote repository URL.'
-        required: true
       REMOTE_SSH_KEY:
         description: 'Private SSH key authorised to push to the remote repository.'
         required: true
@@ -22,6 +19,9 @@ on:
         description: 'SSH configuration. Can be an empty secret, or not included.'
       KNOWN_HOSTS:
         description: 'SSH known hosts. Set using `ssh-keyscan` command.'
+        required: true
+      REMOTE_REPO:
+        description: 'The remote repository URL.'
         required: true
 
 defaults:
@@ -33,7 +33,7 @@ jobs:
     name: 'Push code to remote repository'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the code
+      - name: Check out the code.
         uses: actions/checkout@v6
         with:
           # Ensure PRs check out the right commit.
@@ -41,15 +41,15 @@ jobs:
           # Perform a full checkout to prevent orphaned commits.
           fetch-depth: 0
 
-      - name: Set up the SSH key and configuration
+      - name: Set up the SSH key and configuration.
         uses: shimataro/ssh-key-action@v2
         with:
           key: ${{ secrets.REMOTE_SSH_KEY }}
           config: ${{ secrets.SSH_CONFIG }}
           known_hosts: ${{ secrets.KNOWN_HOSTS }}
 
-      - name: Add the Git remote
+      - name: Add the Git remote.
         run: git remote add target ${{ secrets.REMOTE_REPO }}
 
-      - name: Push code
+      - name: Push code.
         run: git push target HEAD:${{ inputs.target_ref || (github.event.pull_request.head.ref && format('refs/heads/{0}', github.event.pull_request.head.ref) ) || github.ref }} --force

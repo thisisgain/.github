@@ -7,24 +7,24 @@ name: Backup Acquia databases using ACLI.
 on:
   workflow_call:
     inputs:
-      filter:
-        description: 'Optionally, provide a filter for the databases. See: https://docs.acquia.com/acquia-cloud-platform/add-ons/acquia-cli/commands/api:applications:database-list'
-        type: string
-        required: false
       php_version:
         description: 'Optionally, specify a PHP version to install. Default: 8.2.'
         type: string
         required: false
         default: '8.2'
+      filter:
+        description: 'Optionally, provide a filter for the databases. See: https://docs.acquia.com/acquia-cloud-platform/add-ons/acquia-cli/commands/api:applications:database-list'
+        type: string
+        required: false
     secrets:
-      ACQUIA_ENVIRONMENT_ID:
-        description: 'Acquia environment ID.'
-        required: true
       ACLI_CLIENT_ID:
         description: 'The client ID for authenticating with ACLI.'
         required: true
       ACLI_CLIENT_SECRET:
         description: 'The client secret for authenticating with ACLI.'
+        required: true
+      ACQUIA_ENVIRONMENT_ID:
+        description: 'Acquia environment ID.'
         required: true
 
 defaults:

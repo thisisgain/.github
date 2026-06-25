@@ -7,21 +7,21 @@ name: Build and validate Composer.
 on:
   workflow_call:
     inputs:
-      directory:
-        description: 'The directory in which to run commands.'
-        type: string
-        default: './'
       container:
         description: 'The Docker image to use.'
         type: string
         required: true
-      source_key:
-        description: 'The source cache key suffix, or empty to perform a clean checkout.'
+      directory:
+        description: 'The directory in which to run commands.'
         type: string
+        default: './'
       target_key:
         description: 'The target cache key suffix, or empty to throw away.'
         type: string
         default: 'composer'
+      source_key:
+        description: 'The source cache key suffix, or empty to perform a clean checkout.'
+        type: string
       ssh_config:
         description: 'Whether to run SSH configuration for asset access.'
         type: boolean
